@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/services/hairstyle_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
@@ -45,8 +46,8 @@ class _HairstyleCatalogPageState extends State<HairstyleCatalogPage>
 
   Future<void> _recommendWithAI() async {
     if (!_isPremium) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Esta función requiere Premium'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.premiumRequired),
         backgroundColor: AppPalette.accent,
       ));
       return;
@@ -60,11 +61,11 @@ class _HairstyleCatalogPageState extends State<HairstyleCatalogPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(children: [
-          CircularProgressIndicator(),
-          SizedBox(width: 16),
-          Expanded(child: Text('Analizando tu rostro...')),
+          const CircularProgressIndicator(),
+          const SizedBox(width: 16),
+          Expanded(child: Text(AppLocalizations.of(context)!.analyzingFace)),
         ]),
       ),
     );
@@ -174,8 +175,8 @@ class _HairstyleCatalogPageState extends State<HairstyleCatalogPage>
 
   Future<void> _tryOnHairstyle(HairstyleItem item) async {
     if (!_isPremium) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Esta función requiere Premium'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.premiumRequired),
         backgroundColor: AppPalette.accent,
       ));
       return;
@@ -225,7 +226,7 @@ class _HairstyleCatalogPageState extends State<HairstyleCatalogPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
+            child: Text(AppLocalizations.of(ctx)!.close),
           ),
         ],
       ),
@@ -706,6 +707,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -716,7 +718,7 @@ class _EmptyState extends StatelessWidget {
                 size: 72,
                 color: theme.colorScheme.outline.withValues(alpha: 0.4)),
             const SizedBox(height: 20),
-            Text('Sin peinados disponibles',
+            Text(l.noHairstylesAvailable,
                 style: theme.textTheme.titleMedium,
                 textAlign: TextAlign.center),
             const SizedBox(height: 8),
@@ -744,6 +746,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -760,7 +763,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(l.retry),
             ),
           ],
         ),

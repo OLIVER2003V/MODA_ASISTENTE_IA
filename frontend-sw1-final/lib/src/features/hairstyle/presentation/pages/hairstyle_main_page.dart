@@ -154,8 +154,8 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
   }
 
   void _premiumSnack() {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Esta función requiere Premium'),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(AppLocalizations.of(context)!.premiumRequired),
       backgroundColor: AppPalette.accent,
     ));
   }
@@ -202,7 +202,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHero(theme),
+            _buildHero(context, theme),
             const SizedBox(height: 28),
             _buildGenderFilter(provider),
             const SizedBox(height: 24),
@@ -249,7 +249,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
 
   // ── Hero ──────────────────────────────────────────────────────────────────
 
-  Widget _buildHero(ThemeData theme) {
+  Widget _buildHero(BuildContext context, ThemeData theme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -282,7 +282,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Encuentra tu estilo',
+                Text(AppLocalizations.of(context)!.findYourStyle,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 Text(
@@ -303,29 +303,33 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
 
   Widget _buildGenderFilter(HairstyleProvider provider) {
     const filters = [('ALL', 'Todos'), ('FEMALE', 'Femenino'), ('MALE', 'Masculino')];
-    return Row(
-      children: filters.map((f) {
-        final selected = provider.genderFilter == f.$1;
-        return Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: FilterChip(
-            label: Text(f.$2),
-            selected: selected,
-            onSelected: (_) => provider.setGenderFilter(f.$1),
-            showCheckmark: false,
-          ),
-        );
-      }).toList(),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: filters.map((f) {
+          final selected = provider.genderFilter == f.$1;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(f.$2),
+              selected: selected,
+              onSelected: (_) => provider.setGenderFilter(f.$1),
+              showCheckmark: false,
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
   // ── Action buttons ────────────────────────────────────────────────────────
 
   Widget _buildActions(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('¿Qué quieres hacer?',
+        Text(l.whatDoYouWantToDo,
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
             )),
@@ -351,6 +355,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
   // ── AI Result ─────────────────────────────────────────────────────────────
 
   Widget _buildAIResult(ThemeData theme, HairstyleProvider provider) {
+    final l = AppLocalizations.of(context)!;
     final result = _aiResult!;
     final item = result.recommended;
     final genderFilter = provider.genderFilter;
@@ -369,12 +374,12 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
             children: [
               Icon(Icons.auto_awesome_rounded, color: AppPalette.accent, size: 18),
               const SizedBox(width: 8),
-              Text('Recomendado para ti',
+              Text(l.recommendedForYou,
                   style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
               const Spacer(),
               TextButton(
                 onPressed: () => setState(() { _aiResult = null; _aiError = null; }),
-                child: const Text('Cerrar'),
+                child: Text(l.close),
               ),
             ],
           ),
@@ -388,7 +393,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
           ),
           if (others.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Otros estilos compatibles',
+            Text(l.otherCompatibleStyles,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                   fontWeight: FontWeight.w600,
@@ -415,6 +420,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
   // ── Try-on Result ─────────────────────────────────────────────────────────
 
   Widget _buildTryOnResult(ThemeData theme, HairstyleProvider provider) {
+    final l = AppLocalizations.of(context)!;
     final genderFilter = provider.genderFilter;
     final others = provider.catalog.where((h) {
       if (h.id == _selectedItem?.id) return false;
@@ -438,7 +444,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
                   _tryOnError = null;
                   _selectedItem = null;
                 }),
-                child: const Text('Cerrar'),
+                child: Text(l.close),
               ),
             ],
           ),
@@ -474,7 +480,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
                 child: OutlinedButton.icon(
                   onPressed: () => downloadTryOnImage(context, _tryOnResultUrl!),
                   icon: const Icon(Icons.download_rounded, size: 18),
-                  label: const Text('Guardar'),
+                  label: Text(l.save),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppPalette.accent,
                     side: BorderSide(color: AppPalette.accent.withValues(alpha: 0.5)),
@@ -494,7 +500,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
                     builder: (_) => ShareTryOnSheet(imageUrl: _tryOnResultUrl!),
                   ),
                   icon: const Icon(Icons.people_alt_rounded, size: 18),
-                  label: const Text('Comunidad'),
+                  label: Text(l.shareInCommunity),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppPalette.accent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -505,7 +511,7 @@ class _HairstyleMainPageState extends State<HairstyleMainPage> {
           ),
           if (others.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text('Probar otro estilo',
+            Text(l.tryAnotherStyle,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                   fontWeight: FontWeight.w600,
@@ -538,6 +544,7 @@ class _PhotoSourceSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       child: Column(
@@ -551,7 +558,7 @@ class _PhotoSourceSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Text('¿Cómo quieres subir tu foto?',
+          Text(l.howToUploadPhoto,
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
           ListTile(
@@ -563,8 +570,8 @@ class _PhotoSourceSheet extends StatelessWidget {
               ),
               child: Icon(Icons.photo_library_outlined, color: AppPalette.accent),
             ),
-            title: const Text('Desde galería'),
-            subtitle: const Text('Selecciona una foto existente'),
+            title: Text(l.fromGallery),
+            subtitle: Text(l.selectExistingPhoto),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onTap: () => Navigator.pop(context, 'gallery'),
           ),
@@ -580,8 +587,8 @@ class _PhotoSourceSheet extends StatelessWidget {
               ),
               child: const Icon(Icons.camera_alt_outlined, color: Colors.white),
             ),
-            title: const Text('Tomar foto'),
-            subtitle: const Text('Usa la cámara con detección facial'),
+            title: Text(l.takePhoto),
+            subtitle: Text(l.facialDetectionCamera),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onTap: () => Navigator.pop(context, 'camera'),
           ),
@@ -706,6 +713,7 @@ class _RecommendedCardState extends State<_RecommendedCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
@@ -787,7 +795,7 @@ class _RecommendedCardState extends State<_RecommendedCard> {
                   child: FilledButton.icon(
                     onPressed: widget.onTryOn,
                     icon: const Icon(Icons.face_retouching_natural_rounded, size: 18),
-                    label: const Text('Probar este estilo'),
+                    label: Text(l.tryThisStyle),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppPalette.accent,
                       shape: RoundedRectangleBorder(
@@ -886,6 +894,7 @@ class _CatalogPickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final provider = context.watch<HairstyleProvider>();
     final items = provider.displayed;
 
@@ -908,7 +917,7 @@ class _CatalogPickerSheet extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Text('Catálogo de peinados',
+                Text(l.hairstyleCatalog,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 const Spacer(),
@@ -925,7 +934,7 @@ class _CatalogPickerSheet extends StatelessWidget {
                 ? const Center(child: CircularProgressIndicator())
                 : items.isEmpty
                     ? Center(
-                        child: Text('Sin peinados disponibles',
+                        child: Text(l.noHairstylesAvailable,
                             style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurface
                                     .withValues(alpha: 0.5))),
@@ -1115,6 +1124,7 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
       decoration: BoxDecoration(
@@ -1139,7 +1149,7 @@ class _ErrorBanner extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: const Size(0, 32),
               ),
-              child: const Text('Reintentar', style: TextStyle(fontSize: 12)),
+              child: Text(l.retry, style: const TextStyle(fontSize: 12)),
             ),
           ],
         ],

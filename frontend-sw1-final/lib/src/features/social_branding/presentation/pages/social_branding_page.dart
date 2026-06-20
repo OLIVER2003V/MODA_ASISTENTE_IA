@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/social_branding_service.dart';
 import '../../../../features/auth/data/models/user_model.dart';
@@ -126,7 +127,7 @@ class _SocialBrandingPageState extends State<SocialBrandingPage> {
         final user = profileProvider.user;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Branding Personal'),
+            title: Text(AppLocalizations.of(context)!.personalBranding),
             actions: [
               if (!provider.loading)
                 IconButton(
@@ -166,7 +167,7 @@ class _SocialBrandingPageState extends State<SocialBrandingPage> {
           children: [
             CircularProgressIndicator(color: net.primary),
             const SizedBox(height: 16),
-            Text('Generando guía para ${net.label}...',
+            Text(AppLocalizations.of(context)!.generatingGuideFor(net.label),
                 style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 6),
             Text(
@@ -1729,7 +1730,7 @@ class _CaptionTemplatesSectionState extends State<_CaptionTemplatesSection> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Caption copiado al portapapeles'),
+        content: Text(AppLocalizations.of(context)!.captionCopied),
         backgroundColor: AppPalette.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1851,6 +1852,7 @@ class _CaptionVariantState extends State<_CaptionVariant> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     if (widget.text.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -1912,8 +1914,8 @@ class _CaptionVariantState extends State<_CaptionVariant> {
                 child: OutlinedButton.icon(
                   onPressed: widget.onCopy,
                   icon: const Icon(Icons.copy, size: 14),
-                  label: const Text('Copiar caption',
-                      style: TextStyle(fontSize: 12)),
+                  label: Text(l.copyCaption,
+                      style: const TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: widget.color,
                     side: BorderSide(
@@ -2260,6 +2262,7 @@ class _ImagenSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final labelStyle = theme.textTheme.labelMedium?.copyWith(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.55));
 
@@ -2273,7 +2276,7 @@ class _ImagenSection extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         if (imagen.paleta.isNotEmpty) ...[
-          Text('Paleta de colores', style: labelStyle),
+          Text(l.colorPalette, style: labelStyle),
           const SizedBox(height: 10),
           Row(
             children: imagen.paleta.map((hex) {
@@ -2319,7 +2322,7 @@ class _ImagenSection extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         if (imagen.keywords.isNotEmpty) ...[
-          Text('Palabras clave', style: labelStyle),
+          Text(l.keywords, style: labelStyle),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -2370,6 +2373,7 @@ class _ContenidoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final labelStyle = theme.textTheme.labelMedium?.copyWith(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.55));
 
@@ -2416,7 +2420,7 @@ class _ContenidoSection extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         if (contenido.tipos.isNotEmpty) ...[
-          Text('Tipos de contenido', style: labelStyle),
+          Text(l.contentTypes, style: labelStyle),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -2434,7 +2438,7 @@ class _ContenidoSection extends StatelessWidget {
           const SizedBox(height: 14),
         ],
         if (contenido.ideas.isNotEmpty) ...[
-          Text('Ideas de publicaciones', style: labelStyle),
+          Text(l.postIdeas, style: labelStyle),
           const SizedBox(height: 10),
           ...contenido.ideas.asMap().entries.map((e) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -2479,8 +2483,9 @@ class _HashtagsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     if (hashtags.isEmpty) {
-      return Text('No hay hashtags disponibles',
+      return Text(l.noHashtagsAvailable,
           style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4)));
     }
@@ -2502,7 +2507,7 @@ class _HashtagsSection extends StatelessWidget {
                 Clipboard.setData(ClipboardData(text: tag));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('$tag copiado'),
+                    content: Text(l.hashtagCopied(tag)),
                     behavior: SnackBarBehavior.floating,
                     duration: const Duration(seconds: 1),
                     shape: RoundedRectangleBorder(
@@ -2534,7 +2539,7 @@ class _HashtagsSection extends StatelessWidget {
             Clipboard.setData(ClipboardData(text: allHashtags));
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('Todos los hashtags copiados'),
+                content: Text(l.allHashtagsCopied),
                 backgroundColor: AppPalette.success,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -2545,7 +2550,7 @@ class _HashtagsSection extends StatelessWidget {
           },
           icon: const Icon(Icons.copy, size: 14),
           label:
-              const Text('Copiar todos', style: TextStyle(fontSize: 12)),
+              Text(l.copyAll, style: const TextStyle(fontSize: 12)),
           style: OutlinedButton.styleFrom(
             foregroundColor: netColor,
             side: BorderSide(color: netColor.withValues(alpha: 0.4)),
@@ -2570,11 +2575,12 @@ class _HorariosSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (horarios.mejores.isNotEmpty) ...[
-          Text('Momentos ideales',
+          Text(l.idealMoments,
               style: theme.textTheme.labelMedium
                   ?.copyWith(color: AppPalette.success)),
           const SizedBox(height: 8),
@@ -2595,7 +2601,7 @@ class _HorariosSection extends StatelessWidget {
         ],
         if (horarios.evitar.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Text('Evitar publicar',
+          Text(l.avoidPosting,
               style: theme.textTheme.labelMedium
                   ?.copyWith(color: AppPalette.error)),
           const SizedBox(height: 6),
@@ -2627,6 +2633,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -2657,7 +2664,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onLoad,
               icon: const Icon(Icons.auto_awesome),
-              label: Text('Generar guía para ${net.label}'),
+              label: Text(l.generateGuideFor(net.label)),
               style: FilledButton.styleFrom(
                 backgroundColor: net.primary,
                 foregroundColor: Colors.white,
@@ -2680,6 +2687,7 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -2696,7 +2704,7 @@ class _ErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(l.retry),
             ),
           ],
         ),

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/services/outfit_service.dart';
 import '../../../../core/services/post_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -61,9 +62,10 @@ class _OutfitDetailSheetState extends State<_OutfitDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final outfit = widget.outfit;
-    final name = outfit.name?.isNotEmpty == true ? outfit.name! : 'Outfit sin nombre';
+    final name = outfit.name?.isNotEmpty == true ? outfit.name! : l.outfitNoName;
 
     return DraggableScrollableSheet(
       expand: false,
@@ -118,7 +120,7 @@ class _OutfitDetailSheetState extends State<_OutfitDetailSheet> {
                   ),
 
                 // Prendas en grid
-                Text('Prendas', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(l.garments, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 GridView.builder(
                   shrinkWrap: true,
@@ -157,7 +159,7 @@ class _OutfitDetailSheetState extends State<_OutfitDetailSheet> {
                 const SizedBox(height: 20),
 
                 // ── Try-On section ───────────────────────────────────────────
-                Text('Cómo te queda', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(l.howItLooksOnYou, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
 
                 if (_generatingTryOn)
@@ -197,8 +199,9 @@ Future<void> downloadTryOnImage(BuildContext context, String imageUrl) async {
         skipIfExists: false,
       );
       if (context.mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(result.isSuccess ? 'Imagen guardada en la galería' : 'No se pudo guardar'),
+          content: Text(result.isSuccess ? l.imageSavedToGallery : l.couldNotSave),
           backgroundColor: result.isSuccess ? Colors.green : Colors.red,
           behavior: SnackBarBehavior.floating,
         ));
@@ -206,8 +209,8 @@ Future<void> downloadTryOnImage(BuildContext context, String imageUrl) async {
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Error al descargar la imagen'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.errorDownloadingImage),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
       ));
@@ -227,15 +230,15 @@ class TryOnLoadingWidget extends StatefulWidget {
 }
 
 class _TryOnLoadingWidgetState extends State<TryOnLoadingWidget> {
-  static const _defaultMessages = [
-    'Preparando tu look...',
-    'Aplicando las prendas...',
-    'Ajustando los detalles...',
-    '¡Casi listo!',
-    'Un momento más...',
+  List<String> _defaultMessages(AppLocalizations l) => [
+    l.preparingLook,
+    l.applyingGarments,
+    l.adjustingDetails,
+    l.almostReady,
+    l.oneMoreMoment,
   ];
 
-  List<String> get _messages => widget.messages ?? _defaultMessages;
+  List<String> _messages(AppLocalizations l) => widget.messages ?? _defaultMessages(l);
 
   double _progress = 0.0;
   int _msgIndex = 0;
@@ -260,7 +263,7 @@ class _TryOnLoadingWidgetState extends State<TryOnLoadingWidget> {
         } else {
           _progress = 0.90;
         }
-        if (_seconds % 7 == 0) { _msgIndex = (_msgIndex + 1) % _messages.length; }
+        if (_seconds % 7 == 0) { _msgIndex = (_msgIndex + 1) % 5; }
       });
     });
   }
@@ -273,6 +276,7 @@ class _TryOnLoadingWidgetState extends State<TryOnLoadingWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
@@ -316,7 +320,7 @@ class _TryOnLoadingWidgetState extends State<TryOnLoadingWidget> {
                 key: ValueKey(_msgIndex),
                 duration: const Duration(milliseconds: 400),
                 child: Text(
-                  _messages[_msgIndex],
+                  _messages(l)[_msgIndex],
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppPalette.accent,
                     fontWeight: FontWeight.w500,
@@ -334,7 +338,7 @@ class _TryOnLoadingWidgetState extends State<TryOnLoadingWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            widget.subtitle ?? 'La IA está generando tu imagen con FLUX.2',
+            widget.subtitle ?? l.aiGeneratingImage,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
@@ -351,6 +355,7 @@ class _TryOnPlaceholderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     return GestureDetector(
@@ -367,9 +372,9 @@ class _TryOnPlaceholderWidget extends StatelessWidget {
           children: [
             Icon(Icons.auto_awesome, size: 40, color: AppPalette.accent),
             const SizedBox(height: 12),
-            Text('Probarme este outfit', style: theme.textTheme.titleSmall?.copyWith(color: AppPalette.accent, fontWeight: FontWeight.bold)),
+            Text(l.tryOnThisOutfit, style: theme.textTheme.titleSmall?.copyWith(color: AppPalette.accent, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text('Genera una imagen realista de cómo te quedaría',
+            Text(l.tryOnDescription,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
@@ -393,6 +398,7 @@ class _TryOnResultWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       children: [
         ClipRRect(
@@ -414,7 +420,7 @@ class _TryOnResultWidget extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => downloadTryOnImage(context, imageUrl),
                 icon: const Icon(Icons.download_rounded, size: 18),
-                label: const Text('Guardar'),
+                label: Text(l.save),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppPalette.accent,
                   side: BorderSide(color: AppPalette.accent.withValues(alpha: 0.5)),
@@ -434,7 +440,7 @@ class _TryOnResultWidget extends StatelessWidget {
                   builder: (_) => ShareTryOnSheet(imageUrl: imageUrl),
                 ),
                 icon: const Icon(Icons.people_alt_rounded, size: 18),
-                label: const Text('Comunidad'),
+                label: Text(l.communityTitle),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppPalette.accent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -445,7 +451,7 @@ class _TryOnResultWidget extends StatelessWidget {
             IconButton.outlined(
               onPressed: onRegenerate,
               icon: const Icon(Icons.refresh, size: 18),
-              tooltip: 'Regenerar',
+              tooltip: l.regenerate,
               style: IconButton.styleFrom(
                 side: BorderSide(color: AppPalette.accent.withValues(alpha: 0.3)),
               ),
@@ -462,6 +468,7 @@ class _TryOnNeedBodyPhotoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -474,11 +481,11 @@ class _TryOnNeedBodyPhotoWidget extends StatelessWidget {
         children: [
           Icon(Icons.accessibility_new_rounded, color: AppPalette.accent, size: 36),
           const SizedBox(height: 10),
-          Text('Necesitas una foto de cuerpo',
+          Text(l.needBodyPhoto,
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
-            'Para ver cómo te queda el outfit, sube una foto de cuerpo completo en tu perfil. Así la imagen mostrará tu cara y tipo de cuerpo reales.',
+            l.bodyPhotoDescription,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
@@ -488,7 +495,7 @@ class _TryOnNeedBodyPhotoWidget extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
             icon: const Icon(Icons.person_outline, size: 16),
-            label: const Text('Ir a mi perfil'),
+            label: Text(l.goToMyProfile),
             style: FilledButton.styleFrom(backgroundColor: AppPalette.accent),
           ),
         ],
@@ -504,6 +511,7 @@ class _TryOnErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -515,13 +523,13 @@ class _TryOnErrorWidget extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, color: AppPalette.error, size: 32),
           const SizedBox(height: 8),
-          Text('No se pudo generar la imagen', style: theme.textTheme.titleSmall),
+          Text(l.couldNotGenerateImage, style: theme.textTheme.titleSmall),
           const SizedBox(height: 4),
           Text(error.replaceFirst('Exception: ', ''),
               style: theme.textTheme.bodySmall?.copyWith(color: AppPalette.error),
               textAlign: TextAlign.center, maxLines: 3, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 12),
-          FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh, size: 16), label: const Text('Reintentar')),
+          FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh, size: 16), label: Text(l.retry)),
         ],
       ),
     );
@@ -559,8 +567,8 @@ class _ShareTryOnSheetState extends State<ShareTryOnSheet> {
       );
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('¡Publicado en la comunidad!'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.publishedInCommunity),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ));
@@ -579,6 +587,7 @@ class _ShareTryOnSheetState extends State<ShareTryOnSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Padding(
       padding: EdgeInsets.only(
@@ -596,7 +605,7 @@ class _ShareTryOnSheetState extends State<ShareTryOnSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Compartir en Comunidad',
+          Text(l.shareInCommunity,
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           ClipRRect(
@@ -619,7 +628,7 @@ class _ShareTryOnSheetState extends State<ShareTryOnSheet> {
             maxLines: 3,
             maxLength: 280,
             decoration: InputDecoration(
-              hintText: 'Contá algo sobre tu outfit (opcional)...',
+              hintText: l.outfitCaptionHint,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               contentPadding: const EdgeInsets.all(12),
             ),
@@ -635,7 +644,7 @@ class _ShareTryOnSheetState extends State<ShareTryOnSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.send_rounded, size: 18),
-              label: Text(_isPosting ? 'Publicando...' : 'Publicar'),
+              label: Text(_isPosting ? l.publishing : l.publish),
               style: FilledButton.styleFrom(
                 backgroundColor: AppPalette.accent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -684,8 +693,9 @@ class _OutfitHistoryPageState extends State<OutfitHistoryPage> {
                 garmentIds: ids,
               );
           if (ctx.mounted) {
+            final l = AppLocalizations.of(ctx)!;
             ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-              content: Text(ok ? 'Outfit creado' : 'Error al crear outfit'),
+              content: Text(ok ? l.outfitCreated : 'Error al crear outfit'),
               backgroundColor: ok ? AppPalette.accent : AppPalette.error,
             ));
           }
@@ -695,20 +705,21 @@ class _OutfitHistoryPageState extends State<OutfitHistoryPage> {
   }
 
   Future<void> _confirmDelete(BuildContext ctx, String outfitId, String name) async {
+    final l = AppLocalizations.of(ctx)!;
     final confirmed = await showDialog<bool>(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar outfit'),
-        content: Text('¿Eliminar "$name"? Esta acción no se puede deshacer.'),
+        title: Text(l.deleteOutfitTitle),
+        content: Text(l.deleteOutfitConfirm(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: AppPalette.error),
-            child: const Text('Eliminar'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -717,7 +728,7 @@ class _OutfitHistoryPageState extends State<OutfitHistoryPage> {
       final ok = await ctx.read<OutfitHistoryProvider>().remove(outfitId);
       if (!ok && ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('Error al eliminar el outfit')),
+          SnackBar(content: Text(AppLocalizations.of(ctx)!.deleteOutfitTitle)),
         );
       }
     }
@@ -725,13 +736,14 @@ class _OutfitHistoryPageState extends State<OutfitHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis outfits'),
+        title: Text(l.myOutfits),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Actualizar',
+            tooltip: l.refresh,
             onPressed: () => context.read<OutfitHistoryProvider>().load(force: true),
           ),
         ],
@@ -739,7 +751,7 @@ class _OutfitHistoryPageState extends State<OutfitHistoryPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateSheet(context),
         icon: const Icon(Icons.add),
-        label: const Text('Crear outfit'),
+        label: Text(l.createOutfit),
       ),
       body: Consumer<OutfitHistoryProvider>(
         builder: (context, provider, _) {
@@ -789,8 +801,9 @@ class _OutfitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final name = outfit.name?.isNotEmpty == true ? outfit.name! : 'Outfit sin nombre';
+    final name = outfit.name?.isNotEmpty == true ? outfit.name! : l.outfitNoName;
     final garments = outfit.garmentOutfits;
 
     return Card(
@@ -821,7 +834,7 @@ class _OutfitCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20),
                   color: AppPalette.error,
-                  tooltip: 'Eliminar',
+                  tooltip: l.delete,
                   onPressed: onDelete,
                 ),
               ],
@@ -855,7 +868,7 @@ class _OutfitCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'Sin prendas',
+                l.noGarmentImages,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
                 ),
@@ -957,6 +970,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Center(
       child: Padding(
@@ -967,12 +981,12 @@ class _EmptyState extends StatelessWidget {
             Icon(Icons.style_outlined, size: 72,
                 color: theme.colorScheme.outline.withValues(alpha: 0.5)),
             const SizedBox(height: 20),
-            Text('Aún no tenés outfits guardados',
+            Text(l.noOutfitsSaved,
                 style: theme.textTheme.titleMedium,
                 textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(
-              'Generá un outfit con la IA o creá uno manualmente con el botón +.',
+              l.noOutfitsDescription,
               style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.55)),
               textAlign: TextAlign.center,
@@ -1014,12 +1028,12 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ingresá un nombre para el outfit')));
+          SnackBar(content: Text(AppLocalizations.of(context)!.outfitName)));
       return;
     }
     if (_selected.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Seleccioná al menos una prenda')));
+          SnackBar(content: Text(AppLocalizations.of(context)!.garments)));
       return;
     }
     setState(() => _saving = true);
@@ -1029,6 +1043,7 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final garments = widget.wardrobeProvider.garments;
 
@@ -1051,7 +1066,7 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(children: [
-              Text('Nuevo outfit',
+              Text(l.newOutfit,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold)),
               const Spacer(),
@@ -1061,16 +1076,16 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
                     height: 24,
                     child: CircularProgressIndicator(strokeWidth: 2))
               else
-                FilledButton(onPressed: _submit, child: const Text('Crear')),
+                FilledButton(onPressed: _submit, child: Text(l.create)),
             ]),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del outfit',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.outfitName,
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -1078,7 +1093,7 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Seleccioná las prendas (${_selected.length} seleccionadas)',
+              l.selectedGarmentsCount(_selected.length),
               style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
@@ -1088,7 +1103,7 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
                 ? const Center(child: CircularProgressIndicator())
                 : garments.isEmpty
                     ? Center(
-                        child: Text('No tenés prendas en tu armario',
+                        child: Text(l.noGarmentsInWardrobe,
                             style: theme.textTheme.bodyMedium))
                     : ListView.builder(
                         controller: sc,
@@ -1107,7 +1122,7 @@ class _CreateOutfitSheetState extends State<_CreateOutfitSheet> {
                             title: Text(
                               g.name?.isNotEmpty == true
                                   ? g.name!
-                                  : 'Prenda sin nombre',
+                                  : l.garmentNoName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1146,6 +1161,7 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Center(
       child: Padding(
@@ -1162,7 +1178,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(l.retry),
             ),
           ],
         ),

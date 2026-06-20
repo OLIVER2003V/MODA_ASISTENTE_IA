@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/profile_provider.dart';
 
@@ -84,7 +85,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Tomar foto'),
+              title: Text(AppLocalizations.of(context)!.takePhoto),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -92,7 +93,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Elegir de la galería'),
+              title: Text(AppLocalizations.of(context)!.chooseFromGallery),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -109,9 +110,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final ok = await context.read<ProfileProvider>().uploadPhoto(_pendingPhoto!);
     if (ok && mounted) {
       setState(() => _pendingPhoto = null);
-      _showSnack('Foto actualizada');
+      _showSnack(AppLocalizations.of(context)!.photoUpdated);
     } else if (mounted) {
-      _showSnack(context.read<ProfileProvider>().saveError ?? 'Error al subir foto',
+      _showSnack(context.read<ProfileProvider>().saveError ?? AppLocalizations.of(context)!.errorUploadingPhoto,
           isError: true);
     }
   }
@@ -119,9 +120,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _deletePhoto() async {
     final ok = await context.read<ProfileProvider>().deletePhoto();
     if (ok && mounted) {
-      _showSnack('Foto eliminada');
+      _showSnack(AppLocalizations.of(context)!.photoDeleted);
     } else if (mounted) {
-      _showSnack(context.read<ProfileProvider>().saveError ?? 'Error al eliminar foto',
+      _showSnack(context.read<ProfileProvider>().saveError ?? AppLocalizations.of(context)!.errorDeletingPhoto,
           isError: true);
     }
   }
@@ -132,9 +133,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!_formKey.currentState!.validate()) return;
     final ok = await context.read<ProfileProvider>().updateName(_nameCtrl.text.trim());
     if (ok && mounted) {
-      _showSnack('Nombre actualizado');
+      _showSnack(AppLocalizations.of(context)!.nameUpdated);
     } else if (mounted) {
-      _showSnack(context.read<ProfileProvider>().saveError ?? 'Error al actualizar nombre',
+      _showSnack(context.read<ProfileProvider>().saveError ?? AppLocalizations.of(context)!.errorUpdatingName,
           isError: true);
     }
   }
@@ -145,9 +146,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final ok = await context.read<ProfileProvider>().setAvatar(style);
     if (ok && mounted) {
       setState(() => _pendingPhoto = null);
-      _showSnack('Avatar actualizado');
+      _showSnack(AppLocalizations.of(context)!.avatarUpdated);
     } else if (mounted) {
-      _showSnack(context.read<ProfileProvider>().saveError ?? 'Error al cambiar avatar',
+      _showSnack(context.read<ProfileProvider>().saveError ?? AppLocalizations.of(context)!.errorChangingAvatar,
           isError: true);
     }
   }
@@ -167,6 +168,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Consumer<ProfileProvider>(
       builder: (context, provider, _) {
         final user = provider.user;
@@ -174,7 +176,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Editar perfil'),
+            title: Text(l.editProfile),
           ),
           body: saving
               ? const Center(child: CircularProgressIndicator())
@@ -192,14 +194,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           TextButton.icon(
                             onPressed: _photoPickerLoading ? null : _showImageSourceSheet,
                             icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                            label: const Text('Cambiar foto'),
+                            label: Text(l.changePhoto),
                           ),
                           if (user?.profilePhoto != null && user!.profilePhoto!.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             TextButton.icon(
                               onPressed: saving ? null : _deletePhoto,
                               icon: Icon(Icons.delete_outline, size: 18, color: AppPalette.error),
-                              label: Text('Quitar foto', style: TextStyle(color: AppPalette.error)),
+                              label: Text(l.removePhoto, style: TextStyle(color: AppPalette.error)),
                             ),
                           ],
                         ],
@@ -209,7 +211,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         FilledButton.icon(
                           onPressed: saving ? null : _uploadPhoto,
                           icon: const Icon(Icons.upload_rounded, size: 18),
-                          label: const Text('Subir foto seleccionada'),
+                          label: Text(l.uploadSelectedPhoto),
                         ),
                       ],
 
@@ -218,7 +220,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       // ── Nombre ────────────────────────────────────────
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Nombre visible',
+                        child: Text(l.displayName,
                             style: theme.textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.bold)),
                       ),
@@ -231,16 +233,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               child: TextFormField(
                                 controller: _nameCtrl,
                                 textCapitalization: TextCapitalization.words,
-                                decoration: const InputDecoration(
-                                  hintText: 'Tu nombre',
-                                  prefixIcon: Icon(Icons.person_outline),
+                                decoration: InputDecoration(
+                                  hintText: l.yourName,
+                                  prefixIcon: const Icon(Icons.person_outline),
                                 ),
                                 validator: (v) {
                                   if (v == null || v.trim().length < 2) {
-                                    return 'Mínimo 2 caracteres';
+                                    return l.nameMinChars;
                                   }
                                   if (v.trim().length > 60) {
-                                    return 'Máximo 60 caracteres';
+                                    return l.nameMaxChars;
                                   }
                                   return null;
                                 },
@@ -249,7 +251,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             const SizedBox(width: 12),
                             FilledButton(
                               onPressed: saving ? null : _saveName,
-                              child: const Text('Guardar'),
+                              child: Text(l.save),
                             ),
                           ],
                         ),
@@ -260,14 +262,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       // ── Avatar styles ─────────────────────────────────
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Elige un avatar',
+                        child: Text(l.chooseAvatar,
                             style: theme.textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 4),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Se eliminará la foto de perfil al elegir un avatar',
+                        child: Text(l.avatarWillReplacePhoto,
                             style: theme.textTheme.bodySmall?.copyWith(
                                 color:
                                     theme.colorScheme.onSurface.withValues(alpha: 0.55))),

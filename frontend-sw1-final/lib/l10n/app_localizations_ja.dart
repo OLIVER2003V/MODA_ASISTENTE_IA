@@ -392,4 +392,398 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get transcribing => '音声を文字起こし中...';
+
+  @override
+  String get emailRequired => 'メールアドレスを入力してください';
+
+  @override
+  String get emailInvalid => '有効なメールアドレスを入力してください';
+
+  @override
+  String get passwordRequired => 'パスワードを入力してください';
+
+  @override
+  String get passwordTooShort => 'パスワードは6文字以上必要です';
+
+  @override
+  String get nameRequired => '名前を入力してください';
+
+  @override
+  String get confirmPasswordRequired => 'パスワードを確認してください';
+
+  @override
+  String get passwordsDoNotMatch => 'パスワードが一致しません';
+
+  @override
+  String get mustAcceptTerms => '利用規約に同意する必要があります';
+
+  @override
+  String get takePhoto => '写真を撮る';
+
+  @override
+  String get chooseFromGallery => 'ギャラリーから選択';
+
+  @override
+  String get changePhoto => '写真を変更';
+
+  @override
+  String get removePhoto => '写真を削除';
+
+  @override
+  String get uploadSelectedPhoto => '選択した写真をアップロード';
+
+  @override
+  String get displayName => '表示名';
+
+  @override
+  String get yourName => 'あなたの名前';
+
+  @override
+  String get nameMinChars => '最低2文字';
+
+  @override
+  String get nameMaxChars => '最大60文字';
+
+  @override
+  String get chooseAvatar => 'アバターを選択';
+
+  @override
+  String get avatarWillReplacePhoto => 'アバターを選択するとプロフィール写真が削除されます';
+
+  @override
+  String get photoUpdated => '写真を更新しました';
+
+  @override
+  String get errorUploadingPhoto => '写真のアップロードに失敗しました';
+
+  @override
+  String get photoDeleted => '写真を削除しました';
+
+  @override
+  String get errorDeletingPhoto => '写真の削除に失敗しました';
+
+  @override
+  String get nameUpdated => '名前を更新しました';
+
+  @override
+  String get errorUpdatingName => '名前の更新に失敗しました';
+
+  @override
+  String get avatarUpdated => 'アバターを更新しました';
+
+  @override
+  String get errorChangingAvatar => 'アバターの変更に失敗しました';
+
+  @override
+  String get outfitNoName => '名前なしコーデ';
+
+  @override
+  String get noGarmentImages => 'アイテムなし';
+
+  @override
+  String get noOutfitsSaved => 'まだコーデが保存されていません';
+
+  @override
+  String get noOutfitsDescription => 'AIでコーデを生成するか、+ボタンで手動作成してください';
+
+  @override
+  String get createOutfit => 'コーデを作成';
+
+  @override
+  String get newOutfit => '新しいコーデ';
+
+  @override
+  String get outfitName => 'コーデ名';
+
+  @override
+  String get outfitCreated => 'コーデを作成しました';
+
+  @override
+  String get deleteOutfitTitle => 'コーデを削除';
+
+  @override
+  String deleteOutfitConfirm(String name) {
+    return '\"$name\"を削除しますか？この操作は元に戻せません。';
+  }
+
+  @override
+  String get noGarmentsInWardrobe => 'ワードローブにアイテムがありません';
+
+  @override
+  String get garmentNoName => '名前なしアイテム';
+
+  @override
+  String get howItLooksOnYou => 'あなたに似合う';
+
+  @override
+  String get tryOnThisOutfit => 'このコーデを試着';
+
+  @override
+  String get tryOnDescription => '実際に着た姿のリアルな画像を生成';
+
+  @override
+  String get regenerate => '再生成';
+
+  @override
+  String get needBodyPhoto => '全身写真が必要です';
+
+  @override
+  String get bodyPhotoDescription => 'コーデが似合うか確認するため、プロフィールに全身写真をアップロードしてください';
+
+  @override
+  String get goToMyProfile => 'マイプロフィールへ';
+
+  @override
+  String get couldNotGenerateImage => '画像を生成できませんでした';
+
+  @override
+  String get imageSavedToGallery => '画像をギャラリーに保存しました';
+
+  @override
+  String get couldNotSave => '保存できませんでした';
+
+  @override
+  String get errorDownloadingImage => '画像のダウンロードに失敗しました';
+
+  @override
+  String get shareInCommunity => 'コミュニティでシェア';
+
+  @override
+  String get outfitCaptionHint => 'コーデについて何か書いてください（任意）...';
+
+  @override
+  String get publishing => '投稿中...';
+
+  @override
+  String get publishedInCommunity => 'コミュニティに投稿しました！';
+
+  @override
+  String selectedGarmentsCount(int count) {
+    return 'アイテムを選択（$count件選択済み）';
+  }
+
+  @override
+  String get preparingLook => 'ルックを準備中...';
+
+  @override
+  String get applyingGarments => 'アイテムを適用中...';
+
+  @override
+  String get adjustingDetails => 'ディテールを調整中...';
+
+  @override
+  String get almostReady => 'もうすぐ完成！';
+
+  @override
+  String get oneMoreMoment => 'もう少しお待ちください...';
+
+  @override
+  String get aiGeneratingImage => 'AIがFLUX.2であなたの画像を生成中';
+
+  @override
+  String get closetDeleted => 'クローゼットを削除しました';
+
+  @override
+  String get editGarment => 'アイテムを編集';
+
+  @override
+  String get garmentDeleted => 'アイテムを削除しました';
+
+  @override
+  String get editCloset => 'クローゼットを編集';
+
+  @override
+  String get deleteCloset => 'クローゼットを削除';
+
+  @override
+  String get addGarment => 'アイテムを追加';
+
+  @override
+  String get createMyCloset => 'クローゼットを作成';
+
+  @override
+  String get addFirstGarment => '最初のアイテムを追加';
+
+  @override
+  String get closetNameRequired => '名前は必須です';
+
+  @override
+  String get closetUpdated => 'クローゼットを更新しました';
+
+  @override
+  String get garmentAdded => 'アイテムを追加しました';
+
+  @override
+  String get mustAddGarment => '少なくとも1つのアイテムを追加してください';
+
+  @override
+  String get closetCreated => 'クローゼットを作成しました';
+
+  @override
+  String get next => '次へ';
+
+  @override
+  String get back => '戻る';
+
+  @override
+  String get createCloset => 'クローゼットを作成';
+
+  @override
+  String get errorLoading => '読み込みエラー';
+
+  @override
+  String get premiumRequired => 'この機能にはプレミアムが必要です';
+
+  @override
+  String get findYourStyle => 'あなたのスタイルを見つけよう';
+
+  @override
+  String get whatDoYouWantToDo => '何をしますか？';
+
+  @override
+  String get recommendedForYou => 'あなたへのおすすめ';
+
+  @override
+  String get otherCompatibleStyles => '他の似合うスタイル';
+
+  @override
+  String get tryThisStyle => 'このスタイルを試す';
+
+  @override
+  String get hairstyleCatalog => 'ヘアスタイルカタログ';
+
+  @override
+  String get noHairstylesAvailable => 'ヘアスタイルがありません';
+
+  @override
+  String get howToUploadPhoto => '写真のアップロード方法は？';
+
+  @override
+  String get fromGallery => 'ギャラリーから';
+
+  @override
+  String get selectExistingPhoto => '既存の写真を選択';
+
+  @override
+  String get facialDetectionCamera => '顔認識カメラを使用';
+
+  @override
+  String get tryAnotherStyle => '別のスタイルを試す';
+
+  @override
+  String get analyzingFace => '顔を分析中...';
+
+  @override
+  String get reportPost => '投稿を報告';
+
+  @override
+  String get deletePost => '投稿を削除';
+
+  @override
+  String get reportSent => '報告を送信しました。コミュニティを安全に保っていただきありがとうございます。';
+
+  @override
+  String get copiedToClipboard => 'クリップボードにコピーしました';
+
+  @override
+  String get commentsTitle => 'コメント';
+
+  @override
+  String get noCommentsYet => 'まだコメントがありません';
+
+  @override
+  String get newPost => '新しい投稿';
+
+  @override
+  String get whatDoYouWantToShare => '何をシェアしますか？';
+
+  @override
+  String get changeType => 'タイプを変更';
+
+  @override
+  String get chooseOutfit => 'コーデを選択';
+
+  @override
+  String get tapToChoosePhoto => 'タップして写真を選択';
+
+  @override
+  String get writeFashionTip => 'ファッションのヒントを書く';
+
+  @override
+  String get descriptionOptional => '説明（任意）';
+
+  @override
+  String get reactions => 'リアクション';
+
+  @override
+  String get noReactions => 'リアクションなし';
+
+  @override
+  String get loginToPublish => 'ログインして投稿';
+
+  @override
+  String get postedSuccessfully => '✅ 投稿しました';
+
+  @override
+  String get clearFilters => 'フィルターをクリア';
+
+  @override
+  String get captionCopied => 'キャプションをクリップボードにコピーしました';
+
+  @override
+  String get copyCaption => 'キャプションをコピー';
+
+  @override
+  String get colorPalette => 'カラーパレット';
+
+  @override
+  String get keywords => 'キーワード';
+
+  @override
+  String get contentTypes => 'コンテンツタイプ';
+
+  @override
+  String get postIdeas => '投稿アイデア';
+
+  @override
+  String get noHashtagsAvailable => 'ハッシュタグがありません';
+
+  @override
+  String get allHashtagsCopied => 'すべてのハッシュタグをコピーしました';
+
+  @override
+  String get copyAll => 'すべてコピー';
+
+  @override
+  String get idealMoments => '最適な投稿時間';
+
+  @override
+  String get avoidPosting => '投稿を避ける時間';
+
+  @override
+  String generatingGuideFor(String network) {
+    return '$network のガイドを生成中...';
+  }
+
+  @override
+  String generateGuideFor(String network) {
+    return '$network のガイドを生成';
+  }
+
+  @override
+  String hashtagCopied(String tag) {
+    return '$tag をコピーしました';
+  }
+
+  @override
+  String get create => '作成';
+
+  @override
+  String get preparingPhoto => '写真を準備中...';
+
+  @override
+  String get applyingHairstyle => 'ヘアスタイルを適用中...';
+
+  @override
+  String get adjustingStyle => 'スタイルを調整中...';
 }

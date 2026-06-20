@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/user_attribute_service.dart';
@@ -38,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Debes aceptar los términos y condiciones'),
+          content: Text(AppLocalizations.of(context)!.mustAcceptTerms),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
         ),
@@ -97,6 +98,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppPalette.softCoral,
@@ -241,7 +243,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
-                                              return 'Por favor ingresa tu nombre';
+                                              return l.nameRequired;
                                             }
                                             return null;
                                           },
@@ -321,10 +323,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
-                                              return 'Por favor ingresa tu email';
+                                              return l.emailRequired;
                                             }
                                             if (!value.contains('@')) {
-                                              return 'Por favor ingresa un email válido';
+                                              return l.emailInvalid;
                                             }
                                             return null;
                                           },
@@ -418,10 +420,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
-                                              return 'Por favor ingresa tu contraseña';
+                                              return l.passwordRequired;
                                             }
                                             if (value.length < 6) {
-                                              return 'La contraseña debe tener al menos 6 caracteres';
+                                              return l.passwordTooShort;
                                             }
                                             return null;
                                           },
@@ -516,11 +518,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
-                                              return 'Por favor confirma tu contraseña';
+                                              return l.confirmPasswordRequired;
                                             }
                                             if (value !=
                                                 _passwordController.text) {
-                                              return 'Las contraseñas no coinciden';
+                                              return l.passwordsDoNotMatch;
                                             }
                                             return null;
                                           },

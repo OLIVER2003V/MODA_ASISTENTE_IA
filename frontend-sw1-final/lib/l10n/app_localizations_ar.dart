@@ -392,4 +392,402 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get transcribing => 'جارٍ نسخ الصوت...';
+
+  @override
+  String get emailRequired => 'الرجاء إدخال بريدك الإلكتروني';
+
+  @override
+  String get emailInvalid => 'الرجاء إدخال بريد إلكتروني صالح';
+
+  @override
+  String get passwordRequired => 'الرجاء إدخال كلمة المرور';
+
+  @override
+  String get passwordTooShort => 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+
+  @override
+  String get nameRequired => 'الرجاء إدخال اسمك';
+
+  @override
+  String get confirmPasswordRequired => 'الرجاء تأكيد كلمة المرور';
+
+  @override
+  String get passwordsDoNotMatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get mustAcceptTerms => 'يجب قبول الشروط والأحكام';
+
+  @override
+  String get takePhoto => 'التقاط صورة';
+
+  @override
+  String get chooseFromGallery => 'اختيار من المعرض';
+
+  @override
+  String get changePhoto => 'تغيير الصورة';
+
+  @override
+  String get removePhoto => 'إزالة الصورة';
+
+  @override
+  String get uploadSelectedPhoto => 'رفع الصورة المختارة';
+
+  @override
+  String get displayName => 'الاسم المعروض';
+
+  @override
+  String get yourName => 'اسمك';
+
+  @override
+  String get nameMinChars => 'الحد الأدنى حرفان';
+
+  @override
+  String get nameMaxChars => 'الحد الأقصى 60 حرفًا';
+
+  @override
+  String get chooseAvatar => 'اختر صورة رمزية';
+
+  @override
+  String get avatarWillReplacePhoto =>
+      'سيتم حذف صورة الملف الشخصي عند اختيار صورة رمزية';
+
+  @override
+  String get photoUpdated => 'تم تحديث الصورة';
+
+  @override
+  String get errorUploadingPhoto => 'خطأ في رفع الصورة';
+
+  @override
+  String get photoDeleted => 'تم حذف الصورة';
+
+  @override
+  String get errorDeletingPhoto => 'خطأ في حذف الصورة';
+
+  @override
+  String get nameUpdated => 'تم تحديث الاسم';
+
+  @override
+  String get errorUpdatingName => 'خطأ في تحديث الاسم';
+
+  @override
+  String get avatarUpdated => 'تم تحديث الصورة الرمزية';
+
+  @override
+  String get errorChangingAvatar => 'خطأ في تغيير الصورة الرمزية';
+
+  @override
+  String get outfitNoName => 'زي بدون اسم';
+
+  @override
+  String get noGarmentImages => 'لا توجد ملابس';
+
+  @override
+  String get noOutfitsSaved => 'لا توجد أزياء محفوظة';
+
+  @override
+  String get noOutfitsDescription =>
+      'قم بإنشاء زي بالذكاء الاصطناعي أو أنشئه يدويًا بزر +';
+
+  @override
+  String get createOutfit => 'إنشاء زي';
+
+  @override
+  String get newOutfit => 'زي جديد';
+
+  @override
+  String get outfitName => 'اسم الزي';
+
+  @override
+  String get outfitCreated => 'تم إنشاء الزي';
+
+  @override
+  String get deleteOutfitTitle => 'حذف الزي';
+
+  @override
+  String deleteOutfitConfirm(String name) {
+    return 'هل تريد حذف \"$name\"؟ لا يمكن التراجع عن هذا الإجراء.';
+  }
+
+  @override
+  String get noGarmentsInWardrobe => 'لا توجد ملابس في خزانتك';
+
+  @override
+  String get garmentNoName => 'ملابس بدون اسم';
+
+  @override
+  String get howItLooksOnYou => 'كيف يبدو عليك';
+
+  @override
+  String get tryOnThisOutfit => 'تجربة هذا الزي';
+
+  @override
+  String get tryOnDescription => 'قم بإنشاء صورة واقعية لكيفية ظهوره عليك';
+
+  @override
+  String get regenerate => 'إعادة التوليد';
+
+  @override
+  String get needBodyPhoto => 'تحتاج إلى صورة كاملة للجسم';
+
+  @override
+  String get bodyPhotoDescription =>
+      'لرؤية كيف يبدو الزي عليك، قم برفع صورة كاملة للجسم في ملفك الشخصي';
+
+  @override
+  String get goToMyProfile => 'الذهاب إلى ملفي الشخصي';
+
+  @override
+  String get couldNotGenerateImage => 'تعذر إنشاء الصورة';
+
+  @override
+  String get imageSavedToGallery => 'تم حفظ الصورة في المعرض';
+
+  @override
+  String get couldNotSave => 'تعذر الحفظ';
+
+  @override
+  String get errorDownloadingImage => 'خطأ في تنزيل الصورة';
+
+  @override
+  String get shareInCommunity => 'مشاركة في المجتمع';
+
+  @override
+  String get outfitCaptionHint => 'أخبر شيئًا عن زيك (اختياري)...';
+
+  @override
+  String get publishing => 'جارٍ النشر...';
+
+  @override
+  String get publishedInCommunity => 'تم النشر في المجتمع!';
+
+  @override
+  String selectedGarmentsCount(int count) {
+    return 'اختر الملابس ($count مختار)';
+  }
+
+  @override
+  String get preparingLook => 'تحضير إطلالتك...';
+
+  @override
+  String get applyingGarments => 'تطبيق الملابس...';
+
+  @override
+  String get adjustingDetails => 'ضبط التفاصيل...';
+
+  @override
+  String get almostReady => 'تقريبًا جاهز!';
+
+  @override
+  String get oneMoreMoment => 'لحظة أخرى...';
+
+  @override
+  String get aiGeneratingImage =>
+      'يقوم الذكاء الاصطناعي بإنشاء صورتك باستخدام FLUX.2';
+
+  @override
+  String get closetDeleted => 'تم حذف الخزانة';
+
+  @override
+  String get editGarment => 'تعديل الملابس';
+
+  @override
+  String get garmentDeleted => 'تم حذف الملابس';
+
+  @override
+  String get editCloset => 'تعديل الخزانة';
+
+  @override
+  String get deleteCloset => 'حذف الخزانة';
+
+  @override
+  String get addGarment => 'إضافة ملابس';
+
+  @override
+  String get createMyCloset => 'إنشاء خزانتي';
+
+  @override
+  String get addFirstGarment => 'إضافة أول قطعة ملابس';
+
+  @override
+  String get closetNameRequired => 'الاسم مطلوب';
+
+  @override
+  String get closetUpdated => 'تم تحديث الخزانة';
+
+  @override
+  String get garmentAdded => 'تمت إضافة الملابس';
+
+  @override
+  String get mustAddGarment => 'يجب إضافة قطعة ملابس واحدة على الأقل';
+
+  @override
+  String get closetCreated => 'تم إنشاء الخزانة بنجاح';
+
+  @override
+  String get next => 'التالي';
+
+  @override
+  String get back => 'رجوع';
+
+  @override
+  String get createCloset => 'إنشاء خزانة';
+
+  @override
+  String get errorLoading => 'خطأ في التحميل';
+
+  @override
+  String get premiumRequired => 'هذه الميزة تتطلب Premium';
+
+  @override
+  String get findYourStyle => 'ابحث عن أسلوبك';
+
+  @override
+  String get whatDoYouWantToDo => 'ماذا تريد أن تفعل؟';
+
+  @override
+  String get recommendedForYou => 'موصى به لك';
+
+  @override
+  String get otherCompatibleStyles => 'أنماط متوافقة أخرى';
+
+  @override
+  String get tryThisStyle => 'جرّب هذا النمط';
+
+  @override
+  String get hairstyleCatalog => 'كتالوج تسريحات الشعر';
+
+  @override
+  String get noHairstylesAvailable => 'لا توجد تسريحات متاحة';
+
+  @override
+  String get howToUploadPhoto => 'كيف تريد رفع صورتك؟';
+
+  @override
+  String get fromGallery => 'من المعرض';
+
+  @override
+  String get selectExistingPhoto => 'اختر صورة موجودة';
+
+  @override
+  String get facialDetectionCamera => 'استخدم الكاميرا مع الكشف عن الوجه';
+
+  @override
+  String get tryAnotherStyle => 'جرّب نمطًا آخر';
+
+  @override
+  String get analyzingFace => 'تحليل وجهك...';
+
+  @override
+  String get reportPost => 'الإبلاغ عن المنشور';
+
+  @override
+  String get deletePost => 'حذف المنشور';
+
+  @override
+  String get reportSent => 'تم إرسال البلاغ. شكرًا للحفاظ على سلامة المجتمع.';
+
+  @override
+  String get copiedToClipboard => 'تم النسخ إلى الحافظة';
+
+  @override
+  String get commentsTitle => 'التعليقات';
+
+  @override
+  String get noCommentsYet => 'لا توجد تعليقات حتى الآن';
+
+  @override
+  String get newPost => 'منشور جديد';
+
+  @override
+  String get whatDoYouWantToShare => 'ماذا تريد مشاركته؟';
+
+  @override
+  String get changeType => 'تغيير النوع';
+
+  @override
+  String get chooseOutfit => 'اختر زيًا';
+
+  @override
+  String get tapToChoosePhoto => 'اضغط لاختيار صورة';
+
+  @override
+  String get writeFashionTip => 'اكتب نصيحتك في الموضة';
+
+  @override
+  String get descriptionOptional => 'الوصف (اختياري)';
+
+  @override
+  String get reactions => 'التفاعلات';
+
+  @override
+  String get noReactions => 'لا توجد تفاعلات';
+
+  @override
+  String get loginToPublish => 'سجّل دخولك للنشر';
+
+  @override
+  String get postedSuccessfully => '✅ تم النشر بنجاح';
+
+  @override
+  String get clearFilters => 'مسح الفلاتر';
+
+  @override
+  String get captionCopied => 'تم نسخ التسمية التوضيحية';
+
+  @override
+  String get copyCaption => 'نسخ التسمية التوضيحية';
+
+  @override
+  String get colorPalette => 'لوحة الألوان';
+
+  @override
+  String get keywords => 'الكلمات المفتاحية';
+
+  @override
+  String get contentTypes => 'أنواع المحتوى';
+
+  @override
+  String get postIdeas => 'أفكار المنشورات';
+
+  @override
+  String get noHashtagsAvailable => 'لا توجد وسوم متاحة';
+
+  @override
+  String get allHashtagsCopied => 'تم نسخ جميع الوسوم';
+
+  @override
+  String get copyAll => 'نسخ الكل';
+
+  @override
+  String get idealMoments => 'أوقات النشر المثالية';
+
+  @override
+  String get avoidPosting => 'تجنب النشر';
+
+  @override
+  String generatingGuideFor(String network) {
+    return 'جارٍ إنشاء الدليل لـ $network...';
+  }
+
+  @override
+  String generateGuideFor(String network) {
+    return 'إنشاء دليل لـ $network';
+  }
+
+  @override
+  String hashtagCopied(String tag) {
+    return 'تم نسخ $tag';
+  }
+
+  @override
+  String get create => 'إنشاء';
+
+  @override
+  String get preparingPhoto => 'تحضير صورتك...';
+
+  @override
+  String get applyingHairstyle => 'تطبيق تسريحة الشعر...';
+
+  @override
+  String get adjustingStyle => 'ضبط النمط...';
 }

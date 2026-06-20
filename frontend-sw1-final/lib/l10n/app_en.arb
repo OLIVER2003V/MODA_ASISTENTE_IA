@@ -153,5 +153,167 @@
   "newConversation": "New conversation",
   "typeMessage": "Type a message...",
   "recording": "Recording...",
-  "transcribing": "Transcribing audio..."
+  "transcribing": "Transcribing audio...",
+
+  "emailRequired": "Please enter your email",
+  "emailInvalid": "Please enter a valid email",
+  "passwordRequired": "Please enter your password",
+  "passwordTooShort": "Password must be at least 6 characters",
+  "nameRequired": "Please enter your name",
+  "confirmPasswordRequired": "Please confirm your password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "mustAcceptTerms": "You must accept the terms and conditions",
+
+  "takePhoto": "Take photo",
+  "chooseFromGallery": "Choose from gallery",
+  "changePhoto": "Change photo",
+  "removePhoto": "Remove photo",
+  "uploadSelectedPhoto": "Upload selected photo",
+  "displayName": "Display name",
+  "yourName": "Your name",
+  "nameMinChars": "Minimum 2 characters",
+  "nameMaxChars": "Maximum 60 characters",
+  "chooseAvatar": "Choose an avatar",
+  "avatarWillReplacePhoto": "Profile photo will be removed when choosing an avatar",
+  "photoUpdated": "Photo updated",
+  "errorUploadingPhoto": "Error uploading photo",
+  "photoDeleted": "Photo deleted",
+  "errorDeletingPhoto": "Error deleting photo",
+  "nameUpdated": "Name updated",
+  "errorUpdatingName": "Error updating name",
+  "avatarUpdated": "Avatar updated",
+  "errorChangingAvatar": "Error changing avatar",
+
+  "outfitNoName": "Unnamed outfit",
+  "noGarmentImages": "No garments",
+  "noOutfitsSaved": "No outfits saved yet",
+  "noOutfitsDescription": "Generate an outfit with AI or create one manually...",
+  "createOutfit": "Create outfit",
+  "newOutfit": "New outfit",
+  "outfitName": "Outfit name",
+  "outfitCreated": "Outfit created",
+  "deleteOutfitTitle": "Delete outfit",
+  "deleteOutfitConfirm": "Delete \"{name}\"? This action cannot be undone.",
+  "@deleteOutfitConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "noGarmentsInWardrobe": "No garments in your wardrobe",
+  "garmentNoName": "Unnamed garment",
+  "howItLooksOnYou": "How it looks on you",
+  "tryOnThisOutfit": "Try on this outfit",
+  "tryOnDescription": "Get a realistic image of you wearing this outfit",
+  "regenerate": "Regenerate",
+  "needBodyPhoto": "You need a body photo",
+  "bodyPhotoDescription": "Upload a full-body photo in your profile to use virtual try-on",
+  "goToMyProfile": "Go to my profile",
+  "couldNotGenerateImage": "Could not generate image",
+  "imageSavedToGallery": "Image saved to gallery",
+  "couldNotSave": "Could not save",
+  "errorDownloadingImage": "Error downloading image",
+  "shareInCommunity": "Share in Community",
+  "outfitCaptionHint": "Tell us something about your outfit (optional)...",
+  "publishing": "Publishing...",
+  "publishedInCommunity": "Published in the community!",
+  "selectedGarmentsCount": "Select garments ({count} selected)",
+  "@selectedGarmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "preparingLook": "Preparing your look...",
+  "applyingGarments": "Applying garments...",
+  "adjustingDetails": "Adjusting details...",
+  "almostReady": "Almost ready!",
+  "oneMoreMoment": "One more moment...",
+  "aiGeneratingImage": "AI is generating your image",
+
+  "closetDeleted": "Closet deleted",
+  "editGarment": "Edit garment",
+  "garmentDeleted": "Garment deleted",
+  "editCloset": "Edit closet",
+  "deleteCloset": "Delete closet",
+  "addGarment": "Add garment",
+  "createMyCloset": "Create my closet",
+  "addFirstGarment": "Add first garment",
+  "closetNameRequired": "Closet name is required",
+  "closetUpdated": "Closet updated",
+  "garmentAdded": "Garment added",
+  "mustAddGarment": "You must add at least one garment",
+  "closetCreated": "Closet created successfully",
+  "next": "Next",
+  "back": "Back",
+  "createCloset": "Create closet",
+  "errorLoading": "Error loading",
+
+  "premiumRequired": "This feature requires Premium",
+  "findYourStyle": "Find your style",
+  "whatDoYouWantToDo": "What do you want to do?",
+  "recommendedForYou": "Recommended for you",
+  "otherCompatibleStyles": "Other compatible styles",
+  "tryThisStyle": "Try this style",
+  "hairstyleCatalog": "Hairstyle catalog",
+  "noHairstylesAvailable": "No hairstyles available",
+  "howToUploadPhoto": "How do you want to upload your photo?",
+  "fromGallery": "From gallery",
+  "selectExistingPhoto": "Select an existing photo",
+  "facialDetectionCamera": "Use camera with facial detection",
+  "tryAnotherStyle": "Try another style",
+  "analyzingFace": "Analyzing your face...",
+
+  "reportPost": "Report post",
+  "deletePost": "Delete post",
+  "reportSent": "Report sent. Thank you for keeping the community safe.",
+  "copiedToClipboard": "Copied to clipboard",
+  "commentsTitle": "Comments",
+  "noCommentsYet": "No comments yet",
+  "newPost": "New post",
+  "whatDoYouWantToShare": "What do you want to share?",
+  "changeType": "Change type",
+  "chooseOutfit": "Choose an outfit",
+  "tapToChoosePhoto": "Tap to choose a photo",
+  "writeFashionTip": "Write your fashion tip",
+  "descriptionOptional": "Description (optional)",
+  "reactions": "Reactions",
+  "noReactions": "No reactions",
+  "loginToPublish": "Log in to publish",
+  "postedSuccessfully": "✅ Posted successfully",
+  "clearFilters": "Clear filters",
+
+  "captionCopied": "Caption copied to clipboard",
+  "copyCaption": "Copy caption",
+  "colorPalette": "Color palette",
+  "keywords": "Keywords",
+  "contentTypes": "Content types",
+  "postIdeas": "Post ideas",
+  "noHashtagsAvailable": "No hashtags available",
+  "allHashtagsCopied": "All hashtags copied",
+  "copyAll": "Copy all",
+  "idealMoments": "Ideal moments",
+  "avoidPosting": "Avoid posting",
+  "generatingGuideFor": "Generating guide for {network}...",
+  "@generatingGuideFor": {
+    "placeholders": {
+      "network": { "type": "String" }
+    }
+  },
+  "generateGuideFor": "Generate guide for {network}",
+  "@generateGuideFor": {
+    "placeholders": {
+      "network": { "type": "String" }
+    }
+  },
+  "hashtagCopied": "{tag} copied",
+  "@hashtagCopied": {
+    "placeholders": {
+      "tag": { "type": "String" }
+    }
+  },
+
+  "create": "Create",
+  "preparingPhoto": "Preparing your photo...",
+  "applyingHairstyle": "Applying hairstyle...",
+  "adjustingStyle": "Adjusting style..."
 }

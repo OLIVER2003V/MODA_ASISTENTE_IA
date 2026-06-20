@@ -263,9 +263,9 @@ class _PostCardState extends State<_PostCard> {
               if (isOwn) ...[
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: AppPalette.error),
-                  title: const Text(
-                    'Eliminar publicación',
-                    style: TextStyle(color: AppPalette.error),
+                  title: Text(
+                    AppLocalizations.of(context)!.deletePost,
+                    style: const TextStyle(color: AppPalette.error),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -275,7 +275,7 @@ class _PostCardState extends State<_PostCard> {
               ] else ...[
                 ListTile(
                   leading: const Icon(Icons.flag_outlined),
-                  title: const Text('Reportar publicación'),
+                  title: Text(AppLocalizations.of(context)!.reportPost),
                   onTap: () {
                     Navigator.pop(context);
                     _reportPost();
@@ -302,22 +302,25 @@ class _PostCardState extends State<_PostCard> {
   Future<void> _deletePost() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Eliminar publicación'),
-        content: const Text(
-            '¿Eliminás esta publicación? Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppPalette.error),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      builder: (_) {
+        final l = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l.deletePost),
+          content: const Text(
+              '¿Eliminás esta publicación? Esta acción no se puede deshacer.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: AppPalette.error),
+              child: Text(l.delete),
+            ),
+          ],
+        );
+      },
     );
     if (confirm != true || !mounted) return;
     try {
@@ -334,7 +337,7 @@ class _PostCardState extends State<_PostCard> {
   void _reportPost() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Reporte enviado. Gracias por mantener la comunidad.'),
+        content: Text(AppLocalizations.of(context)!.reportSent),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
@@ -360,7 +363,7 @@ class _PostCardState extends State<_PostCard> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Copiado al portapapeles'),
+        content: Text(AppLocalizations.of(context)!.copiedToClipboard),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppPalette.success,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -430,16 +433,19 @@ class _PostCardState extends State<_PostCard> {
                         ),
                         Row(
                           children: [
-                            Tooltip(
-                              message:
-                                  '${post.createdAt.day}/${post.createdAt.month}/${post.createdAt.year} '
-                                  '${post.createdAt.hour.toString().padLeft(2, '0')}:${post.createdAt.minute.toString().padLeft(2, '0')}',
-                              child: Text(
-                                _fmtDate(post.createdAt),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.45),
+                            Flexible(
+                              child: Tooltip(
+                                message:
+                                    '${post.createdAt.day}/${post.createdAt.month}/${post.createdAt.year} '
+                                    '${post.createdAt.hour.toString().padLeft(2, '0')}:${post.createdAt.minute.toString().padLeft(2, '0')}',
+                                child: Text(
+                                  _fmtDate(post.createdAt),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.45),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
@@ -952,6 +958,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Padding(
       padding:
@@ -985,7 +992,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                   children: [
                     const Icon(Icons.chat_bubble_outline, size: 20),
                     const SizedBox(width: 8),
-                    Text('Comentarios',
+                    Text(l.commentsTitle,
                         style: theme.textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(width: 6),
@@ -1019,7 +1026,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                                 const Text('💬',
                                     style: TextStyle(fontSize: 36)),
                                 const SizedBox(height: 10),
-                                Text('Sin comentarios todavía',
+                                Text(l.noCommentsYet,
                                     style: TextStyle(
                                         color: theme.colorScheme.onSurface
                                             .withValues(alpha: 0.5))),
@@ -1264,6 +1271,7 @@ class _PublishModalState extends State<_PublishModal> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Padding(
       padding:
@@ -1290,7 +1298,7 @@ class _PublishModalState extends State<_PublishModal> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
               child: Row(
                 children: [
-                  Text('Nueva publicación',
+                  Text(l.newPost,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold)),
                   const Spacer(),
@@ -1310,7 +1318,7 @@ class _PublishModalState extends State<_PublishModal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('¿Qué querés compartir?',
+                    Text(l.whatDoYouWantToShare,
                         style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurface
                                 .withValues(alpha: 0.6))),
@@ -1364,7 +1372,7 @@ class _PublishModalState extends State<_PublishModal> {
                           children: [
                             Icon(Icons.arrow_back_ios,
                                 size: 14, color: theme.colorScheme.primary),
-                            Text('Cambiar tipo',
+                            Text(l.changeType,
                                 style: TextStyle(
                                     color: theme.colorScheme.primary,
                                     fontSize: 13)),
@@ -1375,7 +1383,7 @@ class _PublishModalState extends State<_PublishModal> {
 
                       // OUTFIT
                       if (_selectedType == 'OUTFIT') ...[
-                        Text('Elegí un outfit',
+                        Text(l.chooseOutfit,
                             style: theme.textTheme.bodyMedium
                                 ?.copyWith(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 10),
@@ -1490,19 +1498,19 @@ class _PublishModalState extends State<_PublishModal> {
                                         fit: BoxFit.cover,
                                         width: double.infinity),
                                   )
-                                : const Center(
+                                : Center(
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(
+                                        const Icon(
                                             Icons
                                                 .add_photo_alternate_outlined,
                                             size: 44,
                                             color: AppPalette.gray400),
-                                        SizedBox(height: 8),
-                                        Text('Tocar para elegir una foto',
-                                            style: TextStyle(
+                                        const SizedBox(height: 8),
+                                        Text(l.tapToChoosePhoto,
+                                            style: const TextStyle(
                                                 color: AppPalette.gray500,
                                                 fontSize: 13)),
                                       ],
@@ -1514,12 +1522,12 @@ class _PublishModalState extends State<_PublishModal> {
                       ],
 
                       if (_selectedType == 'TIP') ...[
-                        Text('Escribí tu tip de moda',
+                        Text(l.writeFashionTip,
                             style: theme.textTheme.bodyMedium
                                 ?.copyWith(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                       ] else ...[
-                        Text('Descripción (opcional)',
+                        Text(l.descriptionOptional,
                             style: theme.textTheme.bodyMedium
                                 ?.copyWith(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
@@ -1571,7 +1579,7 @@ class _PublishModalState extends State<_PublishModal> {
                               : Text(
                                   _uploadingPhoto
                                       ? 'Subiendo imagen…'
-                                      : 'Publicar',
+                                      : l.publish,
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15),
@@ -1662,6 +1670,7 @@ class _ReactionsSheetState extends State<_ReactionsSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
@@ -1689,7 +1698,7 @@ class _ReactionsSheetState extends State<_ReactionsSheet> {
                 children: [
                   const Text('❤️', style: TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
-                  Text('Reacciones',
+                  Text(l.reactions,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold)),
                 ],
@@ -1701,7 +1710,7 @@ class _ReactionsSheetState extends State<_ReactionsSheet> {
                   ? const Center(child: CircularProgressIndicator())
                   : _reactions.isEmpty
                       ? Center(
-                          child: Text('Sin reacciones',
+                          child: Text(l.noReactions,
                               style: TextStyle(
                                   color: theme.colorScheme.onSurface
                                       .withValues(alpha: 0.5))))
@@ -1935,7 +1944,7 @@ class _CommunityPageState extends State<CommunityPage>
     final userId = provider.currentUserId;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Iniciá sesión para publicar')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.loginToPublish)),
       );
       return;
     }
@@ -1955,7 +1964,7 @@ class _CommunityPageState extends State<CommunityPage>
           );
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('✅ Publicado exitosamente'),
+              content: Text(AppLocalizations.of(context)!.postedSuccessfully),
               backgroundColor: AppPalette.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -2107,7 +2116,7 @@ class _CommunityPageState extends State<CommunityPage>
                         provider.setTypeFilter(null);
                         provider.setTimeFilter('ALL');
                       },
-                      child: const Text('Limpiar filtros'),
+                      child: Text(AppLocalizations.of(context)!.clearFilters),
                     ),
                   ],
                 ),
@@ -2163,6 +2172,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -2172,7 +2182,7 @@ class _ErrorView extends StatelessWidget {
             Icon(Icons.error_outline,
                 size: 56, color: AppPalette.error.withValues(alpha: 0.7)),
             const SizedBox(height: 16),
-            Text('Error al cargar',
+            Text(l.errorLoading,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -2184,7 +2194,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Reintentar')),
+                label: Text(l.retry)),
           ],
         ),
       ),

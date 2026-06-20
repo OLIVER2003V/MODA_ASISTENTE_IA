@@ -393,4 +393,402 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get transcribing => 'Transcrevendo áudio...';
+
+  @override
+  String get emailRequired => 'Por favor insira seu e-mail';
+
+  @override
+  String get emailInvalid => 'Insira um e-mail válido';
+
+  @override
+  String get passwordRequired => 'Por favor insira sua senha';
+
+  @override
+  String get passwordTooShort => 'A senha deve ter pelo menos 6 caracteres';
+
+  @override
+  String get nameRequired => 'Por favor insira seu nome';
+
+  @override
+  String get confirmPasswordRequired => 'Por favor confirme sua senha';
+
+  @override
+  String get passwordsDoNotMatch => 'As senhas não coincidem';
+
+  @override
+  String get mustAcceptTerms => 'Você deve aceitar os termos e condições';
+
+  @override
+  String get takePhoto => 'Tirar foto';
+
+  @override
+  String get chooseFromGallery => 'Escolher da galeria';
+
+  @override
+  String get changePhoto => 'Alterar foto';
+
+  @override
+  String get removePhoto => 'Remover foto';
+
+  @override
+  String get uploadSelectedPhoto => 'Enviar foto selecionada';
+
+  @override
+  String get displayName => 'Nome de exibição';
+
+  @override
+  String get yourName => 'Seu nome';
+
+  @override
+  String get nameMinChars => 'Mínimo 2 caracteres';
+
+  @override
+  String get nameMaxChars => 'Máximo 60 caracteres';
+
+  @override
+  String get chooseAvatar => 'Escolha um avatar';
+
+  @override
+  String get avatarWillReplacePhoto =>
+      'A foto de perfil será removida ao escolher um avatar';
+
+  @override
+  String get photoUpdated => 'Foto atualizada';
+
+  @override
+  String get errorUploadingPhoto => 'Erro ao enviar foto';
+
+  @override
+  String get photoDeleted => 'Foto excluída';
+
+  @override
+  String get errorDeletingPhoto => 'Erro ao excluir foto';
+
+  @override
+  String get nameUpdated => 'Nome atualizado';
+
+  @override
+  String get errorUpdatingName => 'Erro ao atualizar nome';
+
+  @override
+  String get avatarUpdated => 'Avatar atualizado';
+
+  @override
+  String get errorChangingAvatar => 'Erro ao alterar avatar';
+
+  @override
+  String get outfitNoName => 'Look sem nome';
+
+  @override
+  String get noGarmentImages => 'Sem roupas';
+
+  @override
+  String get noOutfitsSaved => 'Ainda não há looks salvos';
+
+  @override
+  String get noOutfitsDescription =>
+      'Gere um look com IA ou crie um manualmente...';
+
+  @override
+  String get createOutfit => 'Criar look';
+
+  @override
+  String get newOutfit => 'Novo look';
+
+  @override
+  String get outfitName => 'Nome do look';
+
+  @override
+  String get outfitCreated => 'Look criado';
+
+  @override
+  String get deleteOutfitTitle => 'Excluir look';
+
+  @override
+  String deleteOutfitConfirm(String name) {
+    return 'Excluir \"$name\"? Esta ação não pode ser desfeita.';
+  }
+
+  @override
+  String get noGarmentsInWardrobe => 'Nenhuma roupa no seu guarda-roupa';
+
+  @override
+  String get garmentNoName => 'Roupa sem nome';
+
+  @override
+  String get howItLooksOnYou => 'Como fica em você';
+
+  @override
+  String get tryOnThisOutfit => 'Experimentar este look';
+
+  @override
+  String get tryOnDescription => 'Gere uma imagem realista com este look';
+
+  @override
+  String get regenerate => 'Regenerar';
+
+  @override
+  String get needBodyPhoto => 'Você precisa de uma foto de corpo inteiro';
+
+  @override
+  String get bodyPhotoDescription =>
+      'Envie uma foto de corpo inteiro no seu perfil para usar a prova virtual';
+
+  @override
+  String get goToMyProfile => 'Ir ao meu perfil';
+
+  @override
+  String get couldNotGenerateImage => 'Não foi possível gerar a imagem';
+
+  @override
+  String get imageSavedToGallery => 'Imagem salva na galeria';
+
+  @override
+  String get couldNotSave => 'Não foi possível salvar';
+
+  @override
+  String get errorDownloadingImage => 'Erro ao baixar a imagem';
+
+  @override
+  String get shareInCommunity => 'Compartilhar na Comunidade';
+
+  @override
+  String get outfitCaptionHint => 'Conte algo sobre seu look (opcional)...';
+
+  @override
+  String get publishing => 'Publicando...';
+
+  @override
+  String get publishedInCommunity => 'Publicado na comunidade!';
+
+  @override
+  String selectedGarmentsCount(int count) {
+    return 'Selecione as peças ($count selecionadas)';
+  }
+
+  @override
+  String get preparingLook => 'Preparando seu look...';
+
+  @override
+  String get applyingGarments => 'Aplicando as peças...';
+
+  @override
+  String get adjustingDetails => 'Ajustando os detalhes...';
+
+  @override
+  String get almostReady => 'Quase pronto!';
+
+  @override
+  String get oneMoreMoment => 'Mais um momento...';
+
+  @override
+  String get aiGeneratingImage => 'A IA está gerando sua imagem';
+
+  @override
+  String get closetDeleted => 'Guarda-roupa excluído';
+
+  @override
+  String get editGarment => 'Editar roupa';
+
+  @override
+  String get garmentDeleted => 'Roupa excluída';
+
+  @override
+  String get editCloset => 'Editar guarda-roupa';
+
+  @override
+  String get deleteCloset => 'Excluir guarda-roupa';
+
+  @override
+  String get addGarment => 'Adicionar roupa';
+
+  @override
+  String get createMyCloset => 'Criar meu guarda-roupa';
+
+  @override
+  String get addFirstGarment => 'Adicionar primeira roupa';
+
+  @override
+  String get closetNameRequired => 'O nome do guarda-roupa é obrigatório';
+
+  @override
+  String get closetUpdated => 'Guarda-roupa atualizado';
+
+  @override
+  String get garmentAdded => 'Roupa adicionada';
+
+  @override
+  String get mustAddGarment => 'Você deve adicionar pelo menos uma roupa';
+
+  @override
+  String get closetCreated => 'Guarda-roupa criado com sucesso';
+
+  @override
+  String get next => 'Próximo';
+
+  @override
+  String get back => 'Voltar';
+
+  @override
+  String get createCloset => 'Criar guarda-roupa';
+
+  @override
+  String get errorLoading => 'Erro ao carregar';
+
+  @override
+  String get premiumRequired => 'Este recurso requer Premium';
+
+  @override
+  String get findYourStyle => 'Encontre seu estilo';
+
+  @override
+  String get whatDoYouWantToDo => 'O que você quer fazer?';
+
+  @override
+  String get recommendedForYou => 'Recomendado para você';
+
+  @override
+  String get otherCompatibleStyles => 'Outros estilos compatíveis';
+
+  @override
+  String get tryThisStyle => 'Experimentar este estilo';
+
+  @override
+  String get hairstyleCatalog => 'Catálogo de penteados';
+
+  @override
+  String get noHairstylesAvailable => 'Sem penteados disponíveis';
+
+  @override
+  String get howToUploadPhoto => 'Como você quer enviar sua foto?';
+
+  @override
+  String get fromGallery => 'Da galeria';
+
+  @override
+  String get selectExistingPhoto => 'Selecione uma foto existente';
+
+  @override
+  String get facialDetectionCamera => 'Use a câmera com detecção facial';
+
+  @override
+  String get tryAnotherStyle => 'Experimentar outro estilo';
+
+  @override
+  String get analyzingFace => 'Analisando seu rosto...';
+
+  @override
+  String get reportPost => 'Denunciar publicação';
+
+  @override
+  String get deletePost => 'Excluir publicação';
+
+  @override
+  String get reportSent =>
+      'Denúncia enviada. Obrigado por manter a comunidade.';
+
+  @override
+  String get copiedToClipboard => 'Copiado para a área de transferência';
+
+  @override
+  String get commentsTitle => 'Comentários';
+
+  @override
+  String get noCommentsYet => 'Sem comentários ainda';
+
+  @override
+  String get newPost => 'Nova publicação';
+
+  @override
+  String get whatDoYouWantToShare => 'O que você quer compartilhar?';
+
+  @override
+  String get changeType => 'Alterar tipo';
+
+  @override
+  String get chooseOutfit => 'Escolha um look';
+
+  @override
+  String get tapToChoosePhoto => 'Toque para escolher uma foto';
+
+  @override
+  String get writeFashionTip => 'Escreva sua dica de moda';
+
+  @override
+  String get descriptionOptional => 'Descrição (opcional)';
+
+  @override
+  String get reactions => 'Reações';
+
+  @override
+  String get noReactions => 'Sem reações';
+
+  @override
+  String get loginToPublish => 'Faça login para publicar';
+
+  @override
+  String get postedSuccessfully => '✅ Publicado com sucesso';
+
+  @override
+  String get clearFilters => 'Limpar filtros';
+
+  @override
+  String get captionCopied => 'Caption copiado para a área de transferência';
+
+  @override
+  String get copyCaption => 'Copiar caption';
+
+  @override
+  String get colorPalette => 'Paleta de cores';
+
+  @override
+  String get keywords => 'Palavras-chave';
+
+  @override
+  String get contentTypes => 'Tipos de conteúdo';
+
+  @override
+  String get postIdeas => 'Ideias de publicações';
+
+  @override
+  String get noHashtagsAvailable => 'Nenhuma hashtag disponível';
+
+  @override
+  String get allHashtagsCopied => 'Todas as hashtags copiadas';
+
+  @override
+  String get copyAll => 'Copiar todos';
+
+  @override
+  String get idealMoments => 'Momentos ideais';
+
+  @override
+  String get avoidPosting => 'Evitar publicar';
+
+  @override
+  String generatingGuideFor(String network) {
+    return 'Gerando guia para $network...';
+  }
+
+  @override
+  String generateGuideFor(String network) {
+    return 'Gerar guia para $network';
+  }
+
+  @override
+  String hashtagCopied(String tag) {
+    return '$tag copiado';
+  }
+
+  @override
+  String get create => 'Criar';
+
+  @override
+  String get preparingPhoto => 'Preparando sua foto...';
+
+  @override
+  String get applyingHairstyle => 'Aplicando penteado...';
+
+  @override
+  String get adjustingStyle => 'Ajustando o estilo...';
 }

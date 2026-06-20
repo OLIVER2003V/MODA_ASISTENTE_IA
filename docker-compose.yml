@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+      POSTGRES_DB: modadb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d modadb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend-sw1-final
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend-sw1-final/.env
+    environment:
+      DATABASE_URL: postgresql://appuser:apppassword@postgres:5432/modadb
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ai-service:
+    build:
+      context: ./python-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./python-service/.env
+
+  frontend:
+    build:
+      context: ./frontend-web
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

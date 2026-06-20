@@ -92,8 +92,8 @@ class _WardrobePageState extends State<WardrobePage> {
     final success = await provider.deleteCloset();
     if (mounted && success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Armario eliminado'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.closetDeleted),
           backgroundColor: AppPalette.success,
         ),
       );
@@ -136,7 +136,7 @@ class _WardrobePageState extends State<WardrobePage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Editar prenda',
+            Text(AppLocalizations.of(ctx)!.editGarment,
                 style: Theme.of(ctx)
                     .textTheme
                     .titleMedium
@@ -167,14 +167,14 @@ class _WardrobePageState extends State<WardrobePage> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(ok
-                          ? 'Prenda actualizada'
+                          ? AppLocalizations.of(context)!.garmentAdded
                           : provider.errorMessage ?? 'Error'),
                       backgroundColor:
                           ok ? AppPalette.success : AppPalette.error,
                     ));
                   }
                 },
-                child: const Text('Guardar'),
+                child: Text(AppLocalizations.of(ctx)!.save),
               ),
             ),
           ],
@@ -186,23 +186,26 @@ class _WardrobePageState extends State<WardrobePage> {
   Future<void> _deleteGarment(Garment garment) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar prenda'),
-        content: Text(
-          '¿Eliminar ${garment.name ?? "esta prenda"}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+      builder: (context) {
+        final l = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l.editGarment),
+          content: Text(
+            '¿Eliminar ${garment.name ?? "esta prenda"}?',
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppPalette.error),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: AppPalette.error),
+              child: Text(l.delete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm == true) {
@@ -210,8 +213,8 @@ class _WardrobePageState extends State<WardrobePage> {
       final success = await provider.deleteGarment(garment.id);
       if (mounted && success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Prenda eliminada'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.garmentDeleted),
             backgroundColor: AppPalette.success,
           ),
         );
@@ -268,29 +271,32 @@ class _WardrobePageState extends State<WardrobePage> {
                         break;
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 20),
-                          SizedBox(width: 12),
-                          Text('Editar armario'),
-                        ],
+                  itemBuilder: (context) {
+                    final l = AppLocalizations.of(context)!;
+                    return [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.edit, size: 20),
+                            const SizedBox(width: 12),
+                            Text(l.editCloset),
+                          ],
+                        ),
                       ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 20, color: AppPalette.error),
-                          SizedBox(width: 12),
-                          Text('Eliminar armario',
-                              style: TextStyle(color: AppPalette.error)),
-                        ],
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete, size: 20, color: AppPalette.error),
+                            const SizedBox(width: 12),
+                            Text(l.deleteCloset,
+                                style: const TextStyle(color: AppPalette.error)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ];
+                  },
                 ),
               ],
             ],
@@ -302,7 +308,10 @@ class _WardrobePageState extends State<WardrobePage> {
                   backgroundColor: AppPalette.softCoral,
                   foregroundColor: Colors.white,
                   icon: const Icon(Icons.add),
-                  label: const Text('Agregar prenda'),
+                  label: Text(
+                    AppLocalizations.of(context)!.addGarment,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 )
               : null,
         );
@@ -351,7 +360,7 @@ class _WardrobePageState extends State<WardrobePage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => provider.loadCloset(force: true),
-              child: const Text('Reintentar'),
+              child: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -397,7 +406,7 @@ class _WardrobePageState extends State<WardrobePage> {
             ElevatedButton.icon(
               onPressed: _openCreateClosetSheet,
               icon: const Icon(Icons.add),
-              label: const Text('Crear mi armario'),
+              label: Text(AppLocalizations.of(context)!.createMyCloset),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
@@ -518,7 +527,7 @@ class _WardrobePageState extends State<WardrobePage> {
                     TextButton.icon(
                       onPressed: _openAddGarmentSheet,
                       icon: const Icon(Icons.add),
-                      label: const Text('Agregar primera prenda'),
+                      label: Text(AppLocalizations.of(context)!.addFirstGarment),
                     ),
                   ],
                 ),
@@ -913,7 +922,7 @@ class _VirtualTryOnSheetState extends State<_VirtualTryOnSheet> {
                     child: OutlinedButton.icon(
                       onPressed: () => downloadTryOnImage(context, _resultUrl!),
                       icon: const Icon(Icons.download_rounded, size: 18),
-                      label: const Text('Guardar'),
+                      label: Text(AppLocalizations.of(context)!.save),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppPalette.accent,
                         side: BorderSide(color: AppPalette.accent.withValues(alpha: 0.5)),
@@ -933,7 +942,7 @@ class _VirtualTryOnSheetState extends State<_VirtualTryOnSheet> {
                         builder: (_) => ShareTryOnSheet(imageUrl: _resultUrl!),
                       ),
                       icon: const Icon(Icons.people_alt_rounded, size: 18),
-                      label: const Text('Comunidad'),
+                      label: Text(AppLocalizations.of(context)!.shareInCommunity),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppPalette.accent,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1013,12 +1022,12 @@ class _VirtualTryOnSheetState extends State<_VirtualTryOnSheet> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Tomar foto'),
+              title: Text(AppLocalizations.of(context)!.takePhoto),
               onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.camera); },
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Elegir de galería'),
+              title: Text(AppLocalizations.of(context)!.chooseFromGallery),
               onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.gallery); },
             ),
             const SizedBox(height: 8),
@@ -1074,8 +1083,8 @@ class _EditClosetDialogState extends State<EditClosetDialog> {
   Future<void> _save() async {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El nombre es requerido'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.closetNameRequired),
           backgroundColor: AppPalette.error,
         ),
       );
@@ -1094,8 +1103,8 @@ class _EditClosetDialogState extends State<EditClosetDialog> {
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Armario actualizado'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.closetUpdated),
             backgroundColor: AppPalette.success,
           ),
         );
@@ -1114,8 +1123,9 @@ class _EditClosetDialogState extends State<EditClosetDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Editar armario'),
+      title: Text(l.editCloset),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1142,7 +1152,7 @@ class _EditClosetDialogState extends State<EditClosetDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          child: Text(l.cancel),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _save,
@@ -1155,7 +1165,7 @@ class _EditClosetDialogState extends State<EditClosetDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Guardar'),
+              : Text(l.save),
         ),
       ],
     );
@@ -1221,8 +1231,8 @@ class _AddGarmentSheetState extends State<AddGarmentSheet> {
   Future<void> _addGarment() async {
     if (_selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona una imagen'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.chooseFromGallery),
           backgroundColor: AppPalette.error,
         ),
       );
@@ -1243,8 +1253,8 @@ class _AddGarmentSheetState extends State<AddGarmentSheet> {
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Prenda agregada'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.garmentAdded),
             backgroundColor: AppPalette.success,
           ),
         );
@@ -1264,6 +1274,7 @@ class _AddGarmentSheetState extends State<AddGarmentSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -1292,7 +1303,7 @@ class _AddGarmentSheetState extends State<AddGarmentSheet> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Agregar prenda',
+                l.addGarment,
                 style: theme.textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
@@ -1376,7 +1387,7 @@ class _AddGarmentSheetState extends State<AddGarmentSheet> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text('Agregar prenda'),
+                    : Text(l.addGarment),
               ),
             ],
           ),
@@ -1519,8 +1530,8 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
   Future<void> _createCloset() async {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El nombre del armario es requerido'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.closetNameRequired),
           backgroundColor: AppPalette.error,
         ),
       );
@@ -1529,8 +1540,8 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
     }
     if (_selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Debes agregar al menos una prenda'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.mustAddGarment),
           backgroundColor: AppPalette.error,
         ),
       );
@@ -1554,8 +1565,8 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Armario creado exitosamente'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.closetCreated),
             backgroundColor: AppPalette.success,
           ),
         );
@@ -1576,6 +1587,7 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
@@ -1606,7 +1618,7 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
                 ),
                 Expanded(
                   child: Text(
-                    'Crear mi armario',
+                    l.createMyCloset,
                     style: Theme.of(context).textTheme.titleLarge,
                     textAlign: TextAlign.center,
                   ),
@@ -1697,7 +1709,7 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'El nombre es requerido';
+                  return AppLocalizations.of(context)!.closetNameRequired;
                 }
                 return null;
               },
@@ -1721,12 +1733,12 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
                   setState(() => _currentStep = 1);
                 }
               },
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Siguiente'),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
+                  Text(AppLocalizations.of(context)!.next),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, size: 20),
                 ],
               ),
             ),
@@ -1837,6 +1849,7 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
           builder: (context) {
             final theme = Theme.of(context);
             final isDark = theme.brightness == Brightness.dark;
+            final l = AppLocalizations.of(context)!;
             return Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -1856,7 +1869,7 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
                       child: OutlinedButton(
                         onPressed:
                             _isLoading ? null : () => setState(() => _currentStep = 0),
-                        child: const Text('Atrás'),
+                        child: Text(l.back),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1873,7 +1886,7 @@ class _CreateClosetSheetState extends State<CreateClosetSheet> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Crear armario'),
+                            : Text(l.createCloset),
                       ),
                     ),
                   ],

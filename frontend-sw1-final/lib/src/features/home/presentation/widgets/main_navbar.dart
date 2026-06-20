@@ -58,13 +58,13 @@ class _MainNavbarState extends State<MainNavbar> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6),
             child: GNav(
-              gap: 6,
+              gap: 4,
               activeColor: Colors.white,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               iconSize: 22,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor: theme.colorScheme.primary,
               tabs: _buildTabs(context),

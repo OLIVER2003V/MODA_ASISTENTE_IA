@@ -153,5 +153,167 @@
   "newConversation": "Nueva conversación",
   "typeMessage": "Escribe un mensaje...",
   "recording": "Grabando...",
-  "transcribing": "Transcribiendo audio..."
+  "transcribing": "Transcribiendo audio...",
+
+  "emailRequired": "Por favor ingresá tu email",
+  "emailInvalid": "Ingresá un email válido",
+  "passwordRequired": "Por favor ingresá tu contraseña",
+  "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+  "nameRequired": "Por favor ingresá tu nombre",
+  "confirmPasswordRequired": "Por favor confirmá tu contraseña",
+  "passwordsDoNotMatch": "Las contraseñas no coinciden",
+  "mustAcceptTerms": "Debés aceptar los términos y condiciones",
+
+  "takePhoto": "Tomar foto",
+  "chooseFromGallery": "Elegir de galería",
+  "changePhoto": "Cambiar foto",
+  "removePhoto": "Quitar foto",
+  "uploadSelectedPhoto": "Subir foto seleccionada",
+  "displayName": "Nombre visible",
+  "yourName": "Tu nombre",
+  "nameMinChars": "Mínimo 2 caracteres",
+  "nameMaxChars": "Máximo 60 caracteres",
+  "chooseAvatar": "Elige un avatar",
+  "avatarWillReplacePhoto": "Se eliminará la foto de perfil al elegir un avatar",
+  "photoUpdated": "Foto actualizada",
+  "errorUploadingPhoto": "Error al subir foto",
+  "photoDeleted": "Foto eliminada",
+  "errorDeletingPhoto": "Error al eliminar foto",
+  "nameUpdated": "Nombre actualizado",
+  "errorUpdatingName": "Error al actualizar nombre",
+  "avatarUpdated": "Avatar actualizado",
+  "errorChangingAvatar": "Error al cambiar avatar",
+
+  "outfitNoName": "Outfit sin nombre",
+  "noGarmentImages": "Sin prendas",
+  "noOutfitsSaved": "Aún no tenés outfits guardados",
+  "noOutfitsDescription": "Generá un outfit con la IA o creá uno manualmente...",
+  "createOutfit": "Crear outfit",
+  "newOutfit": "Nuevo outfit",
+  "outfitName": "Nombre del outfit",
+  "outfitCreated": "Outfit creado",
+  "deleteOutfitTitle": "Eliminar outfit",
+  "deleteOutfitConfirm": "¿Eliminar \"{name}\"? Esta acción no se puede deshacer.",
+  "@deleteOutfitConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "noGarmentsInWardrobe": "No tenés prendas en tu armario",
+  "garmentNoName": "Prenda sin nombre",
+  "howItLooksOnYou": "Cómo te queda",
+  "tryOnThisOutfit": "Probarme este outfit",
+  "tryOnDescription": "Genera una imagen realista con este outfit puesto",
+  "regenerate": "Regenerar",
+  "needBodyPhoto": "Necesitás una foto de cuerpo completo",
+  "bodyPhotoDescription": "Subí una foto de cuerpo completo en tu perfil para usar la prueba virtual",
+  "goToMyProfile": "Ir a mi perfil",
+  "couldNotGenerateImage": "No se pudo generar la imagen",
+  "imageSavedToGallery": "Imagen guardada en la galería",
+  "couldNotSave": "No se pudo guardar",
+  "errorDownloadingImage": "Error al descargar la imagen",
+  "shareInCommunity": "Compartir en Comunidad",
+  "outfitCaptionHint": "Contá algo sobre tu outfit (opcional)...",
+  "publishing": "Publicando...",
+  "publishedInCommunity": "¡Publicado en la comunidad!",
+  "selectedGarmentsCount": "Seleccioná las prendas ({count} seleccionadas)",
+  "@selectedGarmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "preparingLook": "Preparando tu look...",
+  "applyingGarments": "Aplicando las prendas...",
+  "adjustingDetails": "Ajustando los detalles...",
+  "almostReady": "¡Casi listo!",
+  "oneMoreMoment": "Un momento más...",
+  "aiGeneratingImage": "La IA está generando tu imagen",
+
+  "closetDeleted": "Armario eliminado",
+  "editGarment": "Editar prenda",
+  "garmentDeleted": "Prenda eliminada",
+  "editCloset": "Editar armario",
+  "deleteCloset": "Eliminar armario",
+  "addGarment": "Agregar prenda",
+  "createMyCloset": "Crear mi armario",
+  "addFirstGarment": "Agregar primera prenda",
+  "closetNameRequired": "El nombre del armario es requerido",
+  "closetUpdated": "Armario actualizado",
+  "garmentAdded": "Prenda agregada",
+  "mustAddGarment": "Debes agregar al menos una prenda",
+  "closetCreated": "Armario creado exitosamente",
+  "next": "Siguiente",
+  "back": "Atrás",
+  "createCloset": "Crear armario",
+  "errorLoading": "Error al cargar",
+
+  "premiumRequired": "Esta función requiere Premium",
+  "findYourStyle": "Encuentra tu estilo",
+  "whatDoYouWantToDo": "¿Qué quieres hacer?",
+  "recommendedForYou": "Recomendado para ti",
+  "otherCompatibleStyles": "Otros estilos compatibles",
+  "tryThisStyle": "Probar este estilo",
+  "hairstyleCatalog": "Catálogo de peinados",
+  "noHairstylesAvailable": "Sin peinados disponibles",
+  "howToUploadPhoto": "¿Cómo quieres subir tu foto?",
+  "fromGallery": "Desde galería",
+  "selectExistingPhoto": "Selecciona una foto existente",
+  "facialDetectionCamera": "Usa la cámara con detección facial",
+  "tryAnotherStyle": "Probar otro estilo",
+  "analyzingFace": "Analizando tu rostro...",
+
+  "reportPost": "Reportar publicación",
+  "deletePost": "Eliminar publicación",
+  "reportSent": "Reporte enviado. Gracias por mantener la comunidad.",
+  "copiedToClipboard": "Copiado al portapapeles",
+  "commentsTitle": "Comentarios",
+  "noCommentsYet": "Sin comentarios todavía",
+  "newPost": "Nueva publicación",
+  "whatDoYouWantToShare": "¿Qué querés compartir?",
+  "changeType": "Cambiar tipo",
+  "chooseOutfit": "Elegí un outfit",
+  "tapToChoosePhoto": "Tocar para elegir una foto",
+  "writeFashionTip": "Escribí tu tip de moda",
+  "descriptionOptional": "Descripción (opcional)",
+  "reactions": "Reacciones",
+  "noReactions": "Sin reacciones",
+  "loginToPublish": "Iniciá sesión para publicar",
+  "postedSuccessfully": "✅ Publicado exitosamente",
+  "clearFilters": "Limpiar filtros",
+
+  "captionCopied": "Caption copiado al portapapeles",
+  "copyCaption": "Copiar caption",
+  "colorPalette": "Paleta de colores",
+  "keywords": "Palabras clave",
+  "contentTypes": "Tipos de contenido",
+  "postIdeas": "Ideas de publicaciones",
+  "noHashtagsAvailable": "No hay hashtags disponibles",
+  "allHashtagsCopied": "Todos los hashtags copiados",
+  "copyAll": "Copiar todos",
+  "idealMoments": "Momentos ideales",
+  "avoidPosting": "Evitar publicar",
+  "generatingGuideFor": "Generando guía para {network}...",
+  "@generatingGuideFor": {
+    "placeholders": {
+      "network": { "type": "String" }
+    }
+  },
+  "generateGuideFor": "Generar guía para {network}",
+  "@generateGuideFor": {
+    "placeholders": {
+      "network": { "type": "String" }
+    }
+  },
+  "hashtagCopied": "{tag} copiado",
+  "@hashtagCopied": {
+    "placeholders": {
+      "tag": { "type": "String" }
+    }
+  },
+
+  "create": "Crear",
+  "preparingPhoto": "Preparando tu foto...",
+  "applyingHairstyle": "Aplicando el peinado...",
+  "adjustingStyle": "Ajustando el estilo..."
 }
