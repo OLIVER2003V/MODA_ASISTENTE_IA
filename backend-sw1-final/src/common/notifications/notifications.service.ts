@@ -49,9 +49,13 @@ export class NotificationsService {
 
     try {
       if (admin.apps.length === 0) {
-        // Azure: JSON string in env var (preferred)
+        // Azure: JSON or Base64-encoded JSON in env var (preferred)
         if (firebase.credentialsJson) {
-          const serviceAccount = JSON.parse(firebase.credentialsJson);
+          const raw = firebase.credentialsJson.trimStart();
+          const decoded = raw.startsWith('{')
+            ? raw
+            : Buffer.from(raw, 'base64').toString('utf-8');
+          const serviceAccount = JSON.parse(decoded);
           admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
         } else {
           // Local: path to JSON file
