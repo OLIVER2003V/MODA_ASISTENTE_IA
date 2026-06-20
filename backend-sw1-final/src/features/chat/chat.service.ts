@@ -232,7 +232,7 @@ export class ChatService {
               conversationId,
             },
           });
-          this.sendOutfitReadyPush(conversation.userId, result.outfit.name);
+          this.sendOutfitReadyPush(conversation.userId, result.outfit.name ?? 'Tu nuevo outfit');
         } catch (err) {
           // ── Retry automático una vez antes de mostrar error ──────────────
           console.warn('[chat.service] generateOutfit falló, reintentando...', (err as Error).message.slice(0, 80));
@@ -251,7 +251,7 @@ export class ChatService {
                 conversationId,
               },
             });
-            this.sendOutfitReadyPush(conversation.userId, result2.outfit.name);
+            this.sendOutfitReadyPush(conversation.userId, result2.outfit.name ?? 'Tu nuevo outfit');
           } catch {
             await this.prisma.conversation.update({
               where: { id: conversationId },
