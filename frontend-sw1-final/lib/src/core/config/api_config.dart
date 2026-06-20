@@ -5,7 +5,7 @@ class ApiConfig {
   /// - Emulador Android : http://10.0.2.2:3000/api
   /// - Dispositivo físico: http://<IP_LOCAL>:3000/api   ← estás aquí
   /// - Producción       : https://tu-dominio.com/api
-  static const String baseUrl = 'http://192.168.100.148:3000/api';
+  static const String baseUrl = 'https://backend.gentledune-b42332e1.eastus2.azurecontainerapps.io/api';
 
   /// Clave pública de Stripe (pk_test_... o pk_live_...)
   /// Obtenerla en https://dashboard.stripe.com/apikeys
