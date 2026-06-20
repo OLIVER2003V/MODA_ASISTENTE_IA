@@ -1,0 +1,12 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# ML models (large binary files)
+models/
+
+# Logs
+*.log

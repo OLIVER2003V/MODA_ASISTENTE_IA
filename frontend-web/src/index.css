@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --font-editorial: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+
+  /* Base fría con acento moderno */
+  --color-bg: #f8fafc;         /* Fondo ligeramente frío (Slate 50) */
+  --color-surface: #ffffff;
+  --color-ink: #0f172a;        /* Texto casi negro (Slate 900) */
+  --color-ink-light: #64748b;  /* Texto gris azulado (Slate 500) */
+  --color-accent: #4f46e5;     /* Azul índigo moderno para destacar (Indigo 600) */
+  --color-accent-light: #e0e7ff; /* Fondo para etiquetas o badges (Indigo 100) */
+  --color-border: #e2e8f0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}

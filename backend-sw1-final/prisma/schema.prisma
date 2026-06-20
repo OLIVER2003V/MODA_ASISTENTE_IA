@@ -1,0 +1,388 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  CLIENT
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  name             String?
+  role             UserRole          @default(CLIENT)
+  isActive         Boolean           @default(true)
+  fcmToken         String?
+  profilePhoto     String?
+  avatarStyle      String?
+  password         String
+  stripeCustomerId String?           @unique
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  userAttributes      UserAttribute[]
+  closets             Closet[]
+  posts               Post[]
+  postInteractions    PostInteraction[]
+  comments            Comment[]
+  conversations       Conversation[]
+  hairstyleFavorites  HairstyleFavorite[]
+  subscription        Subscription?
+  payments            Payment[]
+  followers           Follow[]          @relation("following")
+  following           Follow[]          @relation("follower")
+  dmConversations1    DirectConversation[] @relation("DmParticipant1")
+  dmConversations2    DirectConversation[] @relation("DmParticipant2")
+  dmMessagesSent      DirectMessage[]      @relation("DmSender")
+  inAppNotifications  InAppNotification[]
+
+  @@index([email])
+}
+
+enum SubscriptionStatus {
+  FREE
+  PREMIUM
+  CANCELLED
+  PAST_DUE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id])
+  stripeSubscriptionId String?            @unique
+  status               SubscriptionStatus @default(FREE)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  userId                String
+  user                  User          @relation(fields: [userId], references: [id])
+  stripePaymentIntentId String        @unique
+  amount                Int
+  currency              String        @default("usd")
+  status                PaymentStatus
+  createdAt             DateTime      @default(now())
+
+  @@index([userId])
+}
+
+model UserAttribute {
+  id String @id @default(cuid())
+
+  // Datos físicos básicos
+  gender   String?
+  age      Int?
+  stature  Float?   // cm
+  weight   Float?   // kg
+  bodyType String?  // PEAR | RECTANGLE | HOURGLASS | APPLE | INVERTED_TRIANGLE
+
+  // Apariencia (puede venir de cámara/IA)
+  skinTone  String?  // reemplaza testType — LIGHT | MEDIUM_LIGHT | MEDIUM | MEDIUM_DARK | DARK
+  faceType  String?  // OVAL | ROUND | SQUARE | HEART | OBLONG
+  hairColor String?  // BLACK | BROWN | BLONDE | RED | GRAY | WHITE | OTHER
+  hairType  String?  // STRAIGHT | WAVY | CURLY | COILY
+  eyeColor  String?  // BROWN | HAZEL | BLUE | GREEN | GRAY | OTHER
+
+  // Estilo y preferencias
+  preferredStyles String[] // CASUAL | FORMAL | STREETWEAR | BOHEMIAN | MINIMALIST | SPORTY | ELEGANT
+  favoriteColors  String[] // nombres de colores
+  avoidColors     String[] // colores que evita
+
+  // Apariencia extendida
+  skinSubtone  String?  // WARM | COOL | NEUTRAL
+
+  // Contexto de vida
+  profession   String?
+  climate      String?  // TROPICAL | DRY | TEMPERATE | CONTINENTAL | POLAR
+  climateCity  String?  // ciudad/región para override manual de clima
+
+  // Compras (opcionales, activados por shoppingEnabled)
+  shoppingEnabled Boolean @default(false)
+  clothingSize String?  // XS | S | M | L | XL | XXL
+  shoeSize     Float?   // número de calzado
+  budget       String?  // LOW | MEDIUM | HIGH | LUXURY
+
+  // Foto de cuerpo completo para try-on de outfits
+  bodyPhotoPath String?  // Cloudinary public_id
+  bodyPhotoUrl  String?  // URL permanente — evita llamadas extra a la API de Cloudinary
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Closet {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId   String
+  user     User      @relation(fields: [userId], references: [id])
+  garments Garment[]
+
+  @@index([userId])
+}
+
+enum Category {
+  TOP
+  BOTTOM
+  DRESS
+  OUTERWEAR
+  FOOTWEAR
+  ACCESSORY
+}
+
+model Garment {
+  id          String    @id @default(cuid())
+  name        String?
+  description String?   @db.Text // Descripción generada por IA
+  category    Category?
+  path        String
+  pathLocal   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  closetId       String
+  closet         Closet          @relation(fields: [closetId], references: [id], onDelete: Cascade)
+  garmentOutfits GarmentOutfit[]
+
+  @@index([closetId])
+}
+
+model Outfit {
+  id            String   @id @default(cuid())
+  name          String?
+  score         Int      @default(0)
+  description   String?
+  tryOnImageUrl String?  // URL cacheada del último try-on generado
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  garmentOutfits GarmentOutfit[]
+
+  posts         Post[]
+  conversations Conversation[]
+}
+
+model GarmentOutfit {
+  id        String   @id @default(cuid())
+  garmentId String
+  outfitId  String
+  order     Int      @default(0) // Posición en el outfit (1=arriba, N=abajo)
+  createdAt DateTime @default(now())
+
+  garment Garment @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  outfit  Outfit  @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+
+
+  @@index([garmentId])
+  @@index([outfitId])
+}
+
+enum PostType {
+  OUTFIT
+  PHOTO
+  TIP
+}
+
+model Post {
+  id               String            @id @default(cuid())
+  postType         PostType          @default(OUTFIT)
+  reactionCount    Int               @default(0)
+  commentCount     Int               @default(0)
+  caption          String?           @db.Text
+  imageUrl         String?
+  tags             String[]
+  outfitId         String?
+  outfit           Outfit?           @relation(fields: [outfitId], references: [id])
+  userId           String?
+  user             User?             @relation(fields: [userId], references: [id])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  postInteractions PostInteraction[]
+  comments         Comment[]
+
+  @@index([outfitId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  FIRE
+  WOW
+}
+
+model PostInteraction {
+  id           String       @id @default(cuid())
+  reactionType ReactionType @default(LIKE)
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  postId       String
+  post         Post         @relation(fields: [postId], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("follower",  fields: [followerId],  references: [id])
+  followingId String
+  following   User     @relation("following", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+enum ConversationStatus {
+  CHATTING
+  AWAITING_EVENT
+  AWAITING_WEATHER
+  GENERATING
+  AWAITING_HAIRSTYLE_CHOICE
+  AWAITING_FACE_IMAGE
+  COMPLETED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model Conversation {
+  id        String             @id @default(cuid())
+  status    ConversationStatus @default(AWAITING_EVENT)
+  event     String?
+  weather   String?
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  outfitId  String?
+  outfit    Outfit?            @relation(fields: [outfitId], references: [id])
+  messages  Message[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  content        String       @db.Text
+  role           MessageRole
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model DirectConversation {
+  id             String          @id @default(cuid())
+  participant1Id String
+  participant1   User            @relation("DmParticipant1", fields: [participant1Id], references: [id])
+  participant2Id String
+  participant2   User            @relation("DmParticipant2", fields: [participant2Id], references: [id])
+  messages       DirectMessage[]
+  lastMessageAt  DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+}
+
+model DirectMessage {
+  id             String             @id @default(cuid())
+  content        String             @db.Text
+  conversationId String
+  conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User               @relation("DmSender", fields: [senderId], references: [id])
+  read           Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+model InAppNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+}
+
+model Hairstyle {
+  id          String   @id @default(cuid())
+  description String   @db.Text
+  imageUrl    String
+  imagePath   String
+  gender      String?
+  embedding   String?  @db.Text // JSON-encoded float[] from CLIP (clip-ViT-B-32 → 512 dims)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  favorites HairstyleFavorite[]
+}
+
+model HairstyleFavorite {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  hairstyleId String
+  hairstyle   Hairstyle @relation(fields: [hairstyleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, hairstyleId])
+  @@index([userId])
+}

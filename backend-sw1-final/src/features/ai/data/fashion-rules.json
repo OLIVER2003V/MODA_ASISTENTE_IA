@@ -1,0 +1,135 @@
+{
+  "version": "1.0",
+  "description": "Fashion rules dataset for RAG-style prompt enrichment",
+
+  "colorPairings": [
+    { "base": "navy blue",    "complementary": ["white", "light grey", "cream", "tan", "burgundy"],    "avoid": ["brown", "orange"] },
+    { "base": "black",        "complementary": ["white", "red", "gold", "silver", "camel", "blush"],   "avoid": ["navy blue"] },
+    { "base": "white",        "complementary": ["any color"],                                           "avoid": [] },
+    { "base": "grey",         "complementary": ["navy", "white", "blush", "burgundy", "olive"],        "avoid": ["brown"] },
+    { "base": "beige",        "complementary": ["white", "navy", "brown", "olive", "rust"],            "avoid": ["yellow", "neon"] },
+    { "base": "olive green",  "complementary": ["tan", "rust", "cream", "brown", "camel"],             "avoid": ["bright green", "pink"] },
+    { "base": "burgundy",     "complementary": ["navy", "grey", "cream", "black", "camel"],            "avoid": ["red", "orange"] },
+    { "base": "camel",        "complementary": ["white", "black", "navy", "burgundy", "brown"],        "avoid": ["yellow", "orange"] },
+    { "base": "blush pink",   "complementary": ["white", "grey", "nude", "light blue", "gold"],       "avoid": ["red", "orange"] },
+    { "base": "cobalt blue",  "complementary": ["white", "orange", "yellow", "grey"],                  "avoid": ["green", "purple"] }
+  ],
+
+  "occasionRules": [
+    {
+      "occasion": "formal",
+      "keywords": ["reunión", "trabajo", "oficina", "entrevista", "boda", "gala", "cena formal", "presentación", "graduación", "negocios", "corporativo"],
+      "preferred": ["dress pants", "button-down shirt", "blazer", "formal shoes", "loafers", "elegant boots", "suit", "pencil skirt"],
+      "avoid": ["shorts", "graphic tees", "sneakers", "flip flops", "sportswear", "ripped jeans"],
+      "tips": [
+        "Prioritize tailored fits over relaxed silhouettes",
+        "Stick to a maximum of 3 colors in the outfit",
+        "Accessories should be minimal and elegant",
+        "Monochromatic looks convey authority"
+      ]
+    },
+    {
+      "occasion": "semi-formal",
+      "keywords": ["teatro", "cena", "evento social", "aniversario", "cumpleaños", "fiesta elegante"],
+      "preferred": ["dark jeans", "chinos", "blouse", "shirt", "ankle boots", "heeled sandals", "blazer optional"],
+      "avoid": ["athletic wear", "very casual t-shirts", "flip flops"],
+      "tips": [
+        "Smart-casual is the target — elevate one piece",
+        "A good blazer or structured bag transforms a casual look",
+        "Opt for dark-wash denim if wearing jeans"
+      ]
+    },
+    {
+      "occasion": "casual",
+      "keywords": ["salida", "amigos", "calle", "día libre", "compras", "parque", "café"],
+      "preferred": ["jeans", "sneakers", "t-shirt", "hoodie", "casual dress", "shorts"],
+      "avoid": [],
+      "tips": [
+        "Comfort is key — fit still matters",
+        "One statement piece (sneakers, bag, jacket) elevates casual outfits",
+        "Layering adds visual interest to simple pieces"
+      ]
+    },
+    {
+      "occasion": "sport",
+      "keywords": ["gimnasio", "deporte", "correr", "entrenamiento", "yoga", "ejercicio"],
+      "preferred": ["leggings", "athletic shorts", "sports top", "running shoes", "hoodie", "windbreaker"],
+      "avoid": ["jeans", "formal shoes", "heavy accessories"],
+      "tips": [
+        "Moisture-wicking fabrics for performance",
+        "Compression fits support movement",
+        "Bright or reflective accents for visibility outdoors"
+      ]
+    }
+  ],
+
+  "bodyTypeGuidelines": {
+    "PEAR": {
+      "emphasize": "shoulders and upper body",
+      "tips": ["A-line skirts balance wider hips", "Boat neck or wide-collar tops draw attention up", "Dark bottoms minimize lower half", "Structured jackets add width to shoulders"]
+    },
+    "RECTANGLE": {
+      "emphasize": "create curves",
+      "tips": ["Belted waists define silhouette", "Ruffles and peplum tops add volume", "High-waisted bottoms create shape", "Layering adds dimension"]
+    },
+    "HOURGLASS": {
+      "emphasize": "defined waist",
+      "tips": ["Wrap dresses and tops highlight curves", "Fitted silhouettes work best", "Avoid oversized or boxy styles that hide shape", "High-waisted bottoms enhance waist definition"]
+    },
+    "APPLE": {
+      "emphasize": "legs and décolletage",
+      "tips": ["Empire waist dresses flow from bust down", "V-necks elongate the torso", "Dark tops with light or pattern bottoms balance proportions", "Structured outerwear creates shape"]
+    },
+    "INVERTED_TRIANGLE": {
+      "emphasize": "balance shoulders with hips",
+      "tips": ["Wide-leg or flared pants add volume below", "Avoid horizontal stripes on shoulders", "Patterned or detailed bottoms draw eye down", "Avoid shoulder pads and cap sleeves"]
+    }
+  },
+
+  "garmentPairings": [
+    { "item": "blazer",          "pairs_with": ["t-shirt", "turtleneck", "jeans", "dress pants", "midi skirt"],           "style": "versatile" },
+    { "item": "white shirt",     "pairs_with": ["navy pants", "jeans", "blazer", "chinos", "mini skirt"],                  "style": "classic" },
+    { "item": "leather jacket",  "pairs_with": ["t-shirt", "jeans", "mini dress", "band tee", "sneakers"],                 "style": "edgy" },
+    { "item": "turtleneck",      "pairs_with": ["blazer", "wide-leg pants", "midi skirt", "trench coat", "slip dress"],    "style": "polished" },
+    { "item": "cargo pants",     "pairs_with": ["cropped tee", "hoodie", "tank top", "sneakers", "chunky boots"],          "style": "streetwear" },
+    { "item": "midi skirt",      "pairs_with": ["fitted top", "turtleneck", "blazer", "ankle boots", "loafers"],           "style": "feminine" },
+    { "item": "denim jacket",    "pairs_with": ["floral dress", "t-shirt and jeans", "midi skirt", "band tee"],            "style": "casual" },
+    { "item": "trench coat",     "pairs_with": ["suit", "jeans and turtleneck", "midi dress", "tailored pants"],           "style": "classic" },
+    { "item": "hoodie",          "pairs_with": ["joggers", "jeans", "bike shorts", "cargo pants", "sneakers"],             "style": "streetwear" },
+    { "item": "slip dress",      "pairs_with": ["turtleneck under", "blazer over", "sneakers or heels", "leather jacket"], "style": "versatile" }
+  ],
+
+  "seasonalRules": {
+    "summer": {
+      "fabrics": ["linen", "cotton", "chambray", "rayon", "lightweight jersey"],
+      "colors": ["white", "pastels", "coral", "turquoise", "yellow", "light blue"],
+      "tips": ["Light layers for air-conditioned environments", "Natural fabrics breathe better in heat"]
+    },
+    "winter": {
+      "fabrics": ["wool", "cashmere", "corduroy", "velvet", "thick denim", "fleece"],
+      "colors": ["burgundy", "forest green", "camel", "charcoal", "navy", "plum"],
+      "tips": ["Layer effectively — base, mid, outer", "Accessories (scarf, hat, gloves) complete cold-weather looks"]
+    },
+    "spring": {
+      "fabrics": ["light cotton", "silk", "chiffon", "light denim"],
+      "colors": ["blush", "mint", "lavender", "light yellow", "sky blue"],
+      "tips": ["Transitional layering with cardigans and light jackets", "Florals are seasonally appropriate"]
+    },
+    "autumn": {
+      "fabrics": ["suede", "tweed", "light wool", "cotton", "denim"],
+      "colors": ["rust", "mustard", "olive", "burnt orange", "camel", "brown"],
+      "tips": ["Earth tones dominate", "Boots pair well with nearly all autumn outfits"]
+    }
+  },
+
+  "styleRules": {
+    "CASUAL":       { "maxColors": 3, "patternMix": "subtle", "formality": 1 },
+    "BUSINESS":     { "maxColors": 2, "patternMix": "none",   "formality": 4 },
+    "SPORTY":       { "maxColors": 4, "patternMix": "bold",   "formality": 1 },
+    "ELEGANT":      { "maxColors": 2, "patternMix": "subtle", "formality": 5 },
+    "BOHEMIAN":     { "maxColors": 5, "patternMix": "bold",   "formality": 2 },
+    "MINIMALIST":   { "maxColors": 2, "patternMix": "none",   "formality": 2 },
+    "STREETWEAR":   { "maxColors": 4, "patternMix": "bold",   "formality": 1 },
+    "ROMANTIC":     { "maxColors": 3, "patternMix": "subtle", "formality": 3 }
+  }
+}

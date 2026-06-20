@@ -1,0 +1,22 @@
+# Temporary Office files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# Project documents not for version control
+Analisis.docx
+GEMINI.md
+CLAUDE.md
+diagrama.json
+diagrama_tiempo.puml
+
+# Reference images
+ESTILOS DE PEINADOS/
+
+# Claude Code internal files
+skills-lock.json
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
