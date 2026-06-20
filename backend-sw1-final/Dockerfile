@@ -24,4 +24,5 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
+# DATABASE_URL is injected by Azure Container Apps at runtime
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
