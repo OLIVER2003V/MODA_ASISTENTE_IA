@@ -148,42 +148,45 @@ class _ProfilePageState extends State<ProfilePage> {
       color: theme.colorScheme.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 20),
-            // Avatar del usuario
             _buildAvatar(provider.user!, theme),
-            const SizedBox(height: 24),
-            // Nombre del usuario
+            const SizedBox(height: 16),
             Text(
               provider.user!.name ?? 'Sin nombre',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
-            // Email
+            const SizedBox(height: 6),
+            Text(
+              provider.user!.email,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.email_outlined,
-                  size: 18,
-                  color: theme.colorScheme.outline,
+                _buildBadge(
+                  theme,
+                  icon: Icons.check_circle_outline,
+                  label: provider.user!.isActive ? 'Activo' : 'Inactivo',
+                  color: provider.user!.isActive ? AppPalette.success : theme.colorScheme.outline,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  provider.user!.email,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha:0.7),
-                  ),
+                const SizedBox(width: 10),
+                _buildBadge(
+                  theme,
+                  icon: Icons.calendar_today_outlined,
+                  label: 'Desde ${_formatDate(provider.user!.createdAt)}',
+                  color: theme.colorScheme.primary,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Botón editar perfil
+            const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const EditProfilePage()),
@@ -191,25 +194,19 @@ class _ProfilePageState extends State<ProfilePage> {
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(AppLocalizations.of(context)!.editProfile),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
-            const SizedBox(height: 20),
-            // Card Premium
+            const SizedBox(height: 24),
             _buildPremiumCard(context, theme),
-            const SizedBox(height: 20),
-            // Card con información
-            _buildInfoCard(provider.user!, theme),
-            // Card con atributos del usuario
             if (provider.userAttributes != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               _buildAttributesCard(provider.userAttributes!, theme),
             ],
-            const SizedBox(height: 20),
-            _BodyPhotoCard(theme: theme),
+            const SizedBox(height: 16),
+            _BodyPhotoCard(theme: theme, userId: provider.user!.id),
             const SizedBox(height: 32),
-            // Botón de logout
             _buildLogoutButton(),
             const SizedBox(height: 20),
           ],
@@ -268,35 +265,21 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoCard(User user, ThemeData theme) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _buildInfoRow(
-              theme: theme,
-              icon: Icons.check_circle_outline,
-              label: 'Estado',
-              value: user.isActive ? 'Activo' : 'Inactivo',
-              valueColor: user.isActive ? AppPalette.success : AppPalette.softGray,
-            ),
-            const Divider(height: 32),
-            _buildInfoRow(
-              theme: theme,
-              icon: Icons.calendar_today_outlined,
-              label: 'Miembro desde',
-              value: _formatDate(user.createdAt),
-            ),
-            const Divider(height: 32),
-            _buildInfoRow(
-              theme: theme,
-              icon: Icons.tag_outlined,
-              label: 'ID',
-              value: user.id,
-            ),
-          ],
-        ),
+  Widget _buildBadge(ThemeData theme, {required IconData icon, required String label, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
@@ -656,7 +639,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
 class _BodyPhotoCard extends StatefulWidget {
   final ThemeData theme;
-  const _BodyPhotoCard({required this.theme});
+  final String userId;
+  const _BodyPhotoCard({required this.theme, required this.userId});
 
   @override
   State<_BodyPhotoCard> createState() => _BodyPhotoCardState();
@@ -667,13 +651,13 @@ class _BodyPhotoCardState extends State<_BodyPhotoCard> {
   bool _uploading = false;
   String? _photoUrl;
 
+  String get _cacheKey => 'body_photo_url_${widget.userId}';
+
   @override
   void initState() {
     super.initState();
     _loadPhoto();
   }
-
-  static const _cacheKey = 'body_photo_url';
 
   Future<void> _loadPhoto() async {
     // Show cached URL immediately (no spinner for repeat visits)

@@ -64,8 +64,9 @@ class ChatService {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as List<dynamic>;
-        return data
+        final decoded = json.decode(response.body);
+        final list = decoded is List ? decoded : (decoded['data'] as List<dynamic>);
+        return list
             .map(
               (item) => ChatConversation.fromJson(item as Map<String, dynamic>),
             )
