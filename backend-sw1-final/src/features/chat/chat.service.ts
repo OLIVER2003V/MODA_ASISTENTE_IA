@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { AiService } from 'src/features/ai/ai.service';
+import { NotificationsService } from 'src/common/notifications/notifications.service';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
+    private readonly push: NotificationsService,
   ) {}
 
   async getConversationsByUser(userId: string, page: number = 1, limit: number = 10) {
@@ -90,7 +92,7 @@ export class ChatService {
 
   private async fetchCurrentWeather(city: string): Promise<string | null> {
     try {
-      const url = `https://wttr.in/${encodeURIComponent(city)}?format=%C,+%t`;
+      const url = `https://wttr.in/${encodeURIComponent(city)}?format=%C,+%t&m&lang=es`;
       const res = await fetch(url, { signal: AbortSignal.timeout(4_000) });
       if (!res.ok) return null;
       const text = (await res.text()).trim();
@@ -230,6 +232,7 @@ export class ChatService {
               conversationId,
             },
           });
+          this.sendOutfitReadyPush(conversation.userId, result.outfit.name);
         } catch (err) {
           // ── Retry automático una vez antes de mostrar error ──────────────
           console.warn('[chat.service] generateOutfit falló, reintentando...', (err as Error).message.slice(0, 80));
@@ -248,6 +251,7 @@ export class ChatService {
                 conversationId,
               },
             });
+            this.sendOutfitReadyPush(conversation.userId, result2.outfit.name);
           } catch {
             await this.prisma.conversation.update({
               where: { id: conversationId },
@@ -392,5 +396,20 @@ export class ChatService {
       throw new BadRequestException('No se pudo transcribir el audio. Intenta hablar más claramente.');
     }
     return this.sendMessage(userId, conversationId, text.trim());
+  }
+
+  private sendOutfitReadyPush(userId: string, outfitName: string): void {
+    this.prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } })
+      .then(user => {
+        if (user?.fcmToken) {
+          return this.push.sendNotification({
+            token: user.fcmToken,
+            title: '✨ ¡Tu outfit está listo!',
+            body: outfitName,
+            data: { type: 'outfit_ready' },
+          });
+        }
+      })
+      .catch(() => null);
   }
 }

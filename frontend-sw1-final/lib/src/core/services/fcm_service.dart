@@ -179,15 +179,31 @@ class FcmService {
 
   /// Maneja cuando el usuario abre la app desde una notificacion
   static void _handleMessageOpenedApp(RemoteMessage message) {
-    debugPrint('FCM: App abierta desde notificacion');
-    debugPrint('FCM: Data: ${message.data}');
+    debugPrint('FCM: App abierta desde notificacion: ${message.data}');
+    _handleNavigation(message.data);
+  }
 
-    // Verificar si es una notificacion de reaccion
-    if (message.data['type'] == 'reaction') {
-      final postId = message.data['postId'];
-      debugPrint('FCM: Navegar al post: $postId');
-      // Aqui podrias navegar al post usando GoRouter
+  static void _handleNavigation(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
+    switch (type) {
+      case 'dm':
+        // La pantalla de DMs se abre desde el ícono de mensajes en el perfil.
+        // Guardamos el conversationId para que la app lo abra al iniciar.
+        _pendingConversationId = data['conversationId'] as String?;
+        break;
+      case 'outfit_ready':
+        // El chat ya actualiza en tiempo real; solo traemos la app al frente.
+        break;
+      default:
+        break;
     }
+  }
+
+  static String? _pendingConversationId;
+  static String? consumePendingConversationId() {
+    final id = _pendingConversationId;
+    _pendingConversationId = null;
+    return id;
   }
 
   /// Obtiene el token actual

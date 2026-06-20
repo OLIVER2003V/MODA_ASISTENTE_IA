@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { InAppNotificationService } from 'src/common/in-app-notification/in-app-notification.service';
+import { NotificationsService } from 'src/common/notifications/notifications.service';
 
 const PARTICIPANT_SELECT = {
   id: true, name: true, profilePhoto: true, avatarStyle: true,
@@ -11,6 +12,7 @@ export class DmService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notif:  InAppNotificationService,
+    private readonly push:   NotificationsService,
   ) {}
 
   private sortedPair(a: string, b: string): [string, string] {
@@ -93,12 +95,29 @@ export class DmService {
     const recipientId = conv.participant1Id === senderId ? conv.participant2Id : conv.participant1Id;
     const sender = await this.prisma.user.findUnique({ where: { id: senderId }, select: { name: true } });
 
+    const preview = content.length > 60 ? content.slice(0, 60) + '…' : content;
+    const senderName = sender?.name ?? 'alguien';
+
     this.notif.create(
       recipientId, 'message',
-      `Nuevo mensaje de ${sender?.name ?? 'alguien'}`,
-      content.length > 60 ? content.slice(0, 60) + '…' : content,
+      `Nuevo mensaje de ${senderName}`,
+      preview,
       { conversationId, senderId },
     ).catch(() => null);
+
+    // Push notification
+    const recipient = await this.prisma.user.findUnique({
+      where: { id: recipientId },
+      select: { fcmToken: true },
+    });
+    if (recipient?.fcmToken) {
+      this.push.sendNotification({
+        token: recipient.fcmToken,
+        title: `💬 ${senderName}`,
+        body: preview,
+        data: { type: 'dm', conversationId },
+      }).catch(() => null);
+    }
 
     return msg;
   }
