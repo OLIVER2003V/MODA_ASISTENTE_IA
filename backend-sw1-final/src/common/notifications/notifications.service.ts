@@ -42,25 +42,28 @@ export class NotificationsService {
   private initializeFirebase(): void {
     const { firebase } = envs;
 
-    if (!firebase.keyFilePath) {
-      this.logger.warn('Firebase credentials not configured. Notifications service will not work.');
+    if (!firebase.credentialsJson && !firebase.keyFilePath) {
+      this.logger.warn('Firebase credentials not configured. Push notifications will not work.');
       return;
     }
 
     try {
       if (admin.apps.length === 0) {
-        admin.initializeApp({
-          credential: admin.credential.cert(firebase.keyFilePath),
-        });
+        // Azure: JSON string in env var (preferred)
+        if (firebase.credentialsJson) {
+          const serviceAccount = JSON.parse(firebase.credentialsJson);
+          admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+        } else {
+          // Local: path to JSON file
+          admin.initializeApp({ credential: admin.credential.cert(firebase.keyFilePath!) });
+        }
       }
 
       this.initialized = true;
       this.logger.log('Firebase initialized successfully');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown Firebase initialization error';
-      this.logger.warn(
-        `Firebase credentials are invalid or unreadable. Notifications service will be disabled. ${message}`,
-      );
+      this.logger.warn(`Firebase init failed. Push notifications disabled. ${message}`);
       this.initialized = false;
     }
   }

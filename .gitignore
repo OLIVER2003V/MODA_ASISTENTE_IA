@@ -20,3 +20,7 @@ skills-lock.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Firebase credentials (NEVER commit)
+*adminsdk*.json
+firebase-credentials.json

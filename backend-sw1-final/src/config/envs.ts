@@ -12,6 +12,7 @@ interface EnvVars {
   CLOUDINARY_API_SECRET: string;
   // Firebase
   FIREBASE_KEYFILE_PATH?: string;
+  FIREBASE_CREDENTIALS_JSON?: string;
   OPENAI_API_KEY?: string;
   GEMINI_API_KEY: string;
   OPENROUTER_API_KEY: string;
@@ -42,6 +43,7 @@ const envVarsSchema = joi
     CLOUDINARY_API_SECRET: joi.string().required(),
     // Firebase
     FIREBASE_KEYFILE_PATH: joi.string().optional(),
+    FIREBASE_CREDENTIALS_JSON: joi.string().optional(),
     OPENAI_API_KEY: joi.string().optional(),
     GEMINI_API_KEY: joi.string().required(),
     OPENROUTER_API_KEY: joi.string().required(),
@@ -83,6 +85,7 @@ export const envs = {
   // Firebase
   firebase: {
     keyFilePath: envVars.FIREBASE_KEYFILE_PATH,
+    credentialsJson: envVars.FIREBASE_CREDENTIALS_JSON,
   },
   openaiApiKey: envVars.OPENAI_API_KEY,
   geminiApiKey: envVars.GEMINI_API_KEY,
