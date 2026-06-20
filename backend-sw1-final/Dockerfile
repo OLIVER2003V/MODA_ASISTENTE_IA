@@ -9,6 +9,10 @@ COPY . .
 # Generate Prisma client before building
 RUN npx prisma generate
 RUN npm run build
+RUN echo "=== dist/ contents ===" && ls -la dist/ \
+    && echo "=== checking dist/main.js ===" \
+    && test -f dist/main.js \
+    && echo "OK: dist/main.js found"
 
 # --- Production stage ---
 FROM node:20-alpine AS production
