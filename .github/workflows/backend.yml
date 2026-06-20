@@ -44,7 +44,7 @@ jobs:
       - name: Run database migrations
         working-directory: backend-sw1-final
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_MIGRATION_URL }}
         run: |
           npm ci --omit=dev
           npx prisma migrate deploy
