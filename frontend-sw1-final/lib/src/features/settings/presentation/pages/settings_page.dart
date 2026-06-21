@@ -7,6 +7,7 @@ import '../../../../app/app.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/theme_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/outfit_service.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/locale_provider.dart';
 
@@ -18,6 +19,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _isRetraining = false;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +87,141 @@ class _SettingsPageState extends State<SettingsPage> {
           context.read<LocaleProvider>().setLocale(locale);
           Navigator.pop(ctx);
         },
+      ),
+    );
+  }
+
+  Future<void> _retrainModel() async {
+    setState(() => _isRetraining = true);
+    try {
+      final metrics = await OutfitService.retrainModel();
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.model_training, color: AppPalette.accent),
+              SizedBox(width: 10),
+              Text('Reentrenamiento completado'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MetricRow(
+                  label: 'Accuracy',
+                  value: metrics.accuracy,
+                  display: '${(metrics.accuracy * 100).toStringAsFixed(1)}%'),
+              const SizedBox(height: 8),
+              _MetricRow(
+                  label: 'F1-Score',
+                  value: metrics.f1Score,
+                  display: metrics.f1Score.toStringAsFixed(4)),
+              const SizedBox(height: 8),
+              _MetricRow(
+                  label: 'AUC-ROC',
+                  value: metrics.aucRoc,
+                  display: metrics.aucRoc.toStringAsFixed(4)),
+              const SizedBox(height: 16),
+              Text(
+                'Dataset: ${metrics.nTrain + metrics.nTest} outfits  •  '
+                'CLIP: ${metrics.clipUsed ? "activo" : "no disponible"}',
+                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(ctx)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al reentrenar: $e'),
+          backgroundColor: AppPalette.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isRetraining = false);
+    }
+  }
+
+  void _showNotificationsSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => const _NotificationsSheet(),
+    );
+  }
+
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_l10n.terms),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Al usar ModalA aceptás que toda la información generada por IA es '
+            'orientativa y no constituye asesoramiento profesional de moda.\n\n'
+            'El contenido publicado en la comunidad es responsabilidad exclusiva '
+            'del usuario. Nos reservamos el derecho de eliminar contenido que '
+            'incumpla nuestras normas de convivencia.\n\n'
+            'Las imágenes de prendas son procesadas por servicios de IA de terceros '
+            '(Google Gemini) para generar descripciones automáticas.\n\n'
+            'Última actualización: Junio 2026',
+            style: TextStyle(fontSize: 14, height: 1.6),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(_l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_l10n.privacy),
+        content: const SingleChildScrollView(
+          child: Text(
+            'ModalA recopila fotos de prendas y datos de perfil para generar '
+            'recomendaciones de outfits personalizadas.\n\n'
+            'Las imágenes se almacenan de forma segura en Google Cloud Storage. '
+            'No compartimos tu información personal con terceros sin tu '
+            'consentimiento explícito.\n\n'
+            'Podés solicitar la eliminación total de tus datos en cualquier '
+            'momento contactándonos desde la sección de soporte.\n\n'
+            'Usamos Firebase para notificaciones push. El token de dispositivo '
+            'se almacena únicamente para enviar notificaciones relevantes.\n\n'
+            'Última actualización: Junio 2026',
+            style: TextStyle(fontSize: 14, height: 1.6),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(_l10n.close),
+          ),
+        ],
       ),
     );
   }
@@ -157,7 +295,38 @@ class _SettingsPageState extends State<SettingsPage> {
                 icon: Icons.notifications_outlined,
                 title: _l10n.notifications,
                 subtitle: _l10n.notificationsSub,
-                onTap: () {},
+                onTap: _showNotificationsSheet,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Modelo de IA ─────────────────────────────────────────────────
+          _buildSectionHeader(context, 'Modelo de IA'),
+          const SizedBox(height: 12),
+          _buildSettingsCard(
+            context,
+            children: [
+              _buildSettingsTile(
+                context,
+                icon: Icons.model_training,
+                title: 'Reentrenar modelo de compatibilidad',
+                subtitle: 'Regenera el clasificador de outfits con datos actualizados',
+                onTap: _isRetraining ? null : _retrainModel,
+                trailing: _isRetraining
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.3),
+                      ),
               ),
             ],
           ),
@@ -182,14 +351,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 context,
                 icon: Icons.description_outlined,
                 title: _l10n.terms,
-                onTap: () {},
+                onTap: _showTermsDialog,
               ),
               const Divider(height: 1, indent: 56),
               _buildSettingsTile(
                 context,
                 icon: Icons.privacy_tip_outlined,
                 title: _l10n.privacy,
-                onTap: () {},
+                onTap: _showPrivacyDialog,
               ),
             ],
           ),
@@ -558,5 +727,146 @@ class _LanguageSelectorSheet extends StatelessWidget {
     ),
   ),
 );
+  }
+}
+
+// ── Notifications Sheet ───────────────────────────────────────────────────────
+
+class _NotificationsSheet extends StatefulWidget {
+  const _NotificationsSheet();
+
+  @override
+  State<_NotificationsSheet> createState() => _NotificationsSheetState();
+}
+
+class _NotificationsSheetState extends State<_NotificationsSheet> {
+  bool _dmNotifs = true;
+  bool _communityNotifs = true;
+  bool _outfitNotifs = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          24, 20, 24, MediaQuery.of(context).padding.bottom + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            l.notifications,
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Elegí qué notificaciones querés recibir',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SwitchListTile(
+            value: _dmNotifs,
+            onChanged: (v) => setState(() => _dmNotifs = v),
+            title: const Text('Mensajes directos'),
+            subtitle: const Text('Notificaciones de DMs nuevos'),
+            secondary: const Icon(Icons.chat_bubble_outline),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            value: _communityNotifs,
+            onChanged: (v) => setState(() => _communityNotifs = v),
+            title: const Text('Comunidad'),
+            subtitle: const Text('Likes y comentarios en tus posts'),
+            secondary: const Icon(Icons.favorite_border),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            value: _outfitNotifs,
+            onChanged: (v) => setState(() => _outfitNotifs = v),
+            title: const Text('Recomendaciones'),
+            subtitle: const Text('Outfits y sugerencias de IA'),
+            secondary: const Icon(Icons.auto_awesome_outlined),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Guardar preferencias'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Metric row for the retraining dialog ─────────────────────────────────────
+
+class _MetricRow extends StatelessWidget {
+  final String label;
+  final double value;
+  final String display;
+
+  const _MetricRow({
+    required this.label,
+    required this.value,
+    required this.display,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(label,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value.clamp(0.0, 1.0),
+              minHeight: 8,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              color: value >= 0.90
+                  ? AppPalette.success
+                  : value >= 0.70
+                      ? AppPalette.accent
+                      : AppPalette.error,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 52,
+          child: Text(display,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
   }
 }

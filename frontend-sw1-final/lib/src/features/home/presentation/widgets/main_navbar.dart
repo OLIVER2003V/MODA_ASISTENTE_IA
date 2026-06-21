@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import '../../../../../l10n/app_localizations.dart';
+import 'package:mobile/src/core/services/dm_service.dart';
+import 'package:mobile/src/core/services/fcm_service.dart';
+import 'package:mobile/src/core/services/storage_service.dart';
 import 'package:mobile/src/features/chat/presentation/pages/chat_page.dart';
 import 'package:mobile/src/features/community/presentation/pages/community_page.dart';
+import 'package:mobile/src/features/dm/presentation/pages/dm_chat_page.dart';
 import 'package:mobile/src/features/hairstyle/presentation/pages/hairstyle_main_page.dart';
 import 'package:mobile/src/features/profile/presentation/pages/profile_page.dart';
 import 'package:mobile/src/features/wardrobe/presentation/pages/wardrobe_page.dart';
@@ -24,6 +28,37 @@ class _MainNavbarState extends State<MainNavbar> {
     HairstyleMainPage(),
     ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPendingNotification());
+  }
+
+  Future<void> _checkPendingNotification() async {
+    final convId = FcmService.consumePendingConversationId();
+    if (convId == null || !mounted) return;
+
+    final user = await StorageService.getUser();
+    if (!mounted) return;
+
+    DmConversation? conv;
+    try {
+      final convs = await DmService.getConversations();
+      conv = convs.firstWhere((c) => c.id == convId, orElse: () => throw Exception());
+    } catch (_) {}
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DmChatPage(
+          conversationId: convId,
+          otherUser: conv?.otherUser,
+          currentUserId: user?.id ?? '',
+        ),
+      ),
+    );
+  }
 
   List<GButton> _buildTabs(BuildContext context) {
     final l = AppLocalizations.of(context)!;

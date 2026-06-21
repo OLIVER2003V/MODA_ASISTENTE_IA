@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import { AskQuestionDto, GenerateOutfitDto } from './dto';
 import { envs } from 'src/config/envs';
 import { PrismaService } from 'src/common/prisma/prisma.service';
+import { PythonAiService } from 'src/common/python/python-ai.service';
 
 // ─── Async task queue (in-memory, 202/polling pattern) ───────────────────────
 
@@ -54,7 +55,10 @@ export class AiService {
   // Fashion rules dataset loaded at startup
   private readonly fashionRules: FashionRules = loadFashionRules();
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma:        PrismaService,
+    private readonly pythonAiService: PythonAiService,
+  ) {
     this.gemini = new GoogleGenerativeAI(envs.geminiApiKey);
     this.openrouter = new OpenAI({
       apiKey: envs.openrouterApiKey,
@@ -718,24 +722,71 @@ Responde SOLO con JSON válido:
       const selectedGarments = (outfitData.outfit?.garments ?? []).filter((g) => garmentMap.has(g.id));
       if (selectedGarments.length === 0) throw new BadRequestException('La IA no seleccionó prendas válidas del armario');
 
-      const finalGarments = this.filterGarmentsByCategory(selectedGarments, garmentMap);
+      let finalGarments = this.filterGarmentsByCategory(selectedGarments, garmentMap);
       if (finalGarments.length === 0) throw new BadRequestException('No se pudo armar un outfit válido con las prendas disponibles');
+
+      // ── Score outfit compatibility with trained ML model ───────────────────
+      const buildPayload = (garments: typeof finalGarments) =>
+        garments.map((g) => {
+          const full = garmentMap.get(g.id)!;
+          return { category: String(full.category ?? 'TOP'), description: full.description ?? '' };
+        });
+
+      let compatResult = await this.pythonAiService.scoreOutfitCompatibility(buildPayload(finalGarments), event);
+      let compatScore  = compatResult ? Math.round(compatResult.score * 100) : 0;
+
+      if (compatResult) {
+        console.log(`[generateOutfit] Compatibility score: ${compatResult.score.toFixed(3)} (${compatResult.label}) — model_active=${compatResult.model_active}`);
+
+        // If score is low, retry with Gemini at lower temperature for a safer outfit
+        if (compatResult.score < 0.60) {
+          console.log('[generateOutfit] Low score — retrying with Gemini (temp=0.3)...');
+          try {
+            const retryModel = this.gemini.getGenerativeModel({
+              model:              'gemini-2.5-flash',
+              systemInstruction:  outfitSystemPrompt,
+              generationConfig:   { temperature: 0.3, maxOutputTokens: 2000, responseMimeType: 'application/json' },
+            });
+            const retryResult = await retryModel.generateContent(outfitUserPrompt);
+            const retryText   = retryResult.response.text();
+            const retryData   = this.parseJsonFromLlm<OutfitAiResponse>(retryText);
+            const retrySelected = (retryData.outfit?.garments ?? []).filter((g) => garmentMap.has(g.id));
+            const retryFiltered = this.filterGarmentsByCategory(retrySelected, garmentMap);
+
+            if (retryFiltered.length > 0) {
+              const retryScore = await this.pythonAiService.scoreOutfitCompatibility(buildPayload(retryFiltered), event);
+              if (retryScore && retryScore.score > compatResult.score) {
+                console.log(`[generateOutfit] Retry improved score: ${retryScore.score.toFixed(3)} — using Gemini outfit`);
+                finalGarments = retryFiltered;
+                compatScore   = Math.round(retryScore.score * 100);
+                compatResult  = retryScore;
+                // Use Gemini's outfit name/description if available
+                if (retryData.outfit?.name) outfitData.outfit = retryData.outfit;
+              }
+            }
+          } catch (retryErr) {
+            console.warn('[generateOutfit] Retry failed, using original outfit:', (retryErr as Error).message);
+          }
+        }
+      }
+      // ──────────────────────────────────────────────────────────────────────
 
       const newOutfit = await this.prisma.outfit.create({
         data: {
-          name: outfitData.outfit?.name ?? 'Outfit generado',
+          name:        outfitData.outfit?.name ?? 'Outfit generado',
           description: outfitData.outfit?.description ?? '',
+          score:       compatScore,
           garmentOutfits: {
             create: finalGarments.map((g: { id: string; order?: number }, i: number) => ({
               garmentId: g.id,
-              order: g.order ?? i + 1,
+              order:     g.order ?? i + 1,
             })),
           },
         },
         include: { garmentOutfits: { include: { garment: true }, orderBy: { order: 'asc' } } },
       });
 
-      return { success: true, outfit: newOutfit, aiSuggestion: outfitData.outfit };
+      return { success: true, outfit: newOutfit, aiSuggestion: outfitData.outfit, compatibilityScore: compatScore };
     } catch (error) {
       if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
       throw new BadRequestException(`Error al procesar el outfit: ${error instanceof Error ? error.message : String(error)}`);
@@ -1718,5 +1769,11 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
     console.error('REPAIRED ATTEMPT:', repaired);
     console.error('-----------------------------------');
     throw new BadRequestException('La IA devolvió una respuesta que no pudo procesarse. Intentá de nuevo.');
+  }
+
+  // ─── ML Retraining ──────────────────────────────────────────────────────────
+
+  async retrainCompatibilityModel() {
+    return this.pythonAiService.triggerRetraining();
   }
 }

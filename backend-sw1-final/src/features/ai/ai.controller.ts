@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, HttpCode, UseInterceptors, UploadedFile, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, HttpCode, UseInterceptors, UploadedFile, BadRequestException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AiService } from './ai.service';
 import { AskQuestionDto, AnalyzeImageDto, FixMultiplicityDto, ValidateDiagramDto, GenerateOutfitDto } from './dto';
@@ -68,6 +68,13 @@ export class AiController {
   @Post('generate-outfit')
   async generateOutfit(@Body() generateOutfitDto: GenerateOutfitDto) {
     return this.aiService.generateOutfit(generateOutfitDto);
+  }
+
+  @Post('retrain')
+  async retrainModel() {
+    const result = await this.aiService.retrainCompatibilityModel();
+    if (!result) throw new ServiceUnavailableException('Python AI service no disponible');
+    return result;
   }
 
   @Post('translate')

@@ -144,6 +144,22 @@ class OutfitService {
     }
   }
 
+  /// Dispara el reentrenamiento del modelo de compatibilidad en el Python service
+  static Future<RetrainingMetrics> retrainModel() async {
+    final token = await StorageService.getToken();
+    if (token == null) throw Exception('No hay token de autenticación');
+    final res = await http.post(
+      Uri.parse('$baseUrl/ai/retrain'),
+      headers: {'Authorization': 'Bearer $token'},
+    ).timeout(const Duration(minutes: 3));
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return RetrainingMetrics.fromJson(
+          json.decode(res.body) as Map<String, dynamic>);
+    }
+    final err = json.decode(res.body);
+    throw Exception(err['message'] ?? 'Error al reentrenar el modelo');
+  }
+
   /// Obtiene las prendas de un outfit específico
   /// [outfitId] - ID del outfit
   static Future<List<Garment>> getGarmentsByOutfitId(String outfitId) async {
@@ -330,6 +346,36 @@ class SavedOutfit {
               ?.map((e) => GarmentOutfit.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+    );
+  }
+}
+
+class RetrainingMetrics {
+  final double accuracy;
+  final double f1Score;
+  final double aucRoc;
+  final int nTrain;
+  final int nTest;
+  final bool clipUsed;
+
+  const RetrainingMetrics({
+    required this.accuracy,
+    required this.f1Score,
+    required this.aucRoc,
+    required this.nTrain,
+    required this.nTest,
+    required this.clipUsed,
+  });
+
+  factory RetrainingMetrics.fromJson(Map<String, dynamic> json) {
+    final metrics = json['metrics'] as Map<String, dynamic>? ?? json;
+    return RetrainingMetrics(
+      accuracy: (metrics['accuracy'] as num).toDouble(),
+      f1Score: (metrics['f1_score'] as num).toDouble(),
+      aucRoc: (metrics['auc_roc'] as num).toDouble(),
+      nTrain: (metrics['n_train'] as num).toInt(),
+      nTest: (metrics['n_test'] as num).toInt(),
+      clipUsed: metrics['clip_used'] as bool? ?? false,
     );
   }
 }

@@ -19,13 +19,22 @@ class WardrobePage extends StatefulWidget {
 }
 
 class _WardrobePageState extends State<WardrobePage> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
-    // Cargar datos solo si no hay caché reciente
+    _searchCtrl.addListener(() => setState(() => _searchQuery = _searchCtrl.text));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WardrobeProvider>().loadCloset();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   void _openCreateClosetSheet() {
@@ -422,7 +431,14 @@ class _WardrobePageState extends State<WardrobePage> {
 
   Widget _buildClosetView(WardrobeProvider provider) {
     final closet = provider.closetData!.closet;
-    final garments = provider.garments;
+    final allGarments = provider.garments;
+    final garments = _searchQuery.isEmpty
+        ? allGarments
+        : allGarments
+            .where((g) => (g.name ?? '')
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()))
+            .toList();
 
     return RefreshIndicator(
       onRefresh: () => provider.loadCloset(force: true),
@@ -504,6 +520,32 @@ class _WardrobePageState extends State<WardrobePage> {
               ),
             ),
           ),
+          // Barra de búsqueda
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: TextField(
+                controller: _searchCtrl,
+                decoration: InputDecoration(
+                  hintText: 'Buscar prendas...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: _searchCtrl.clear,
+                        )
+                      : null,
+                  filled: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+          ),
           // Grid de prendas
           if (garments.isEmpty)
             SliverFillRemaining(
@@ -511,24 +553,36 @@ class _WardrobePageState extends State<WardrobePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.inventory_2_outlined,
+                    Icon(
+                      _searchQuery.isNotEmpty
+                          ? Icons.search_off
+                          : Icons.inventory_2_outlined,
                       size: 48,
                       color: AppPalette.softGray,
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No hay prendas en tu armario',
+                      _searchQuery.isNotEmpty
+                          ? 'Sin resultados para "$_searchQuery"'
+                          : 'No hay prendas en tu armario',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                           ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    TextButton.icon(
-                      onPressed: _openAddGarmentSheet,
-                      icon: const Icon(Icons.add),
-                      label: Text(AppLocalizations.of(context)!.addFirstGarment),
-                    ),
+                    if (_searchQuery.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: _searchCtrl.clear,
+                        icon: const Icon(Icons.clear),
+                        label: const Text('Limpiar búsqueda'),
+                      )
+                    else
+                      TextButton.icon(
+                        onPressed: _openAddGarmentSheet,
+                        icon: const Icon(Icons.add),
+                        label: Text(AppLocalizations.of(context)!.addFirstGarment),
+                      ),
                   ],
                 ),
               ),

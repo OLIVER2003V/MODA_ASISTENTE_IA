@@ -345,15 +345,18 @@ class _DmChatPageState extends State<DmChatPage> with WidgetsBindingObserver {
   List<DmMessage> _messages = [];
   bool _loading = true;
   bool _sending = false;
+  bool _isTyping = false;
   final _ctrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   Timer? _pollTimer;
+  Timer? _typingTimer;
   String? _lastKnownId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _ctrl.addListener(_onTextChanged);
     _loadMessages();
     _pollTimer = Timer.periodic(
       const Duration(seconds: 5),
@@ -361,10 +364,19 @@ class _DmChatPageState extends State<DmChatPage> with WidgetsBindingObserver {
     );
   }
 
+  void _onTextChanged() {
+    if (!_isTyping) setState(() => _isTyping = true);
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _isTyping = false);
+    });
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
+    _typingTimer?.cancel();
     _ctrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -495,14 +507,15 @@ class _DmChatPageState extends State<DmChatPage> with WidgetsBindingObserver {
                         fontWeight: FontWeight.w700, fontSize: 15),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    'En línea',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppPalette.success,
-                      fontWeight: FontWeight.w500,
+                  if (_isTyping)
+                    Text(
+                      'Escribiendo...',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppPalette.success,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

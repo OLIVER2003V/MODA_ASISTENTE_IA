@@ -3,6 +3,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { PrismaModule } from 'src/common/prisma/prisma.module';
+import { PythonAiModule } from 'src/common/python/python-ai.module';
 import * as multer from 'multer';
 
 @Module({
@@ -11,6 +12,7 @@ import * as multer from 'multer';
       storage: multer.memoryStorage(),
     }),
     PrismaModule,
+    PythonAiModule,
   ],
   controllers: [AiController],
   providers: [AiService],

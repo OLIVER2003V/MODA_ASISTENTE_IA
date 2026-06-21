@@ -36,6 +36,39 @@ export interface GarmentAnalysisResult {
   confidence:     { category: number; style: number };
 }
 
+/** Shape returned by POST /training/run */
+export interface RetrainingResult {
+  status:  'completed';
+  message: string;
+  metrics: {
+    accuracy:         number;
+    f1_score:         number;
+    auc_roc:          number;
+    confusion_matrix: number[][];
+    n_train:          number;
+    n_test:           number;
+    features:         string[];
+    clip_used:        boolean;
+    model:            string;
+    split:            string;
+  };
+}
+
+/** Shape returned by POST /outfit/score */
+export interface OutfitCompatibilityResult {
+  score:        number;
+  label:        'compatible' | 'incompatible';
+  details: {
+    style_consistency:      number;
+    color_harmony:          number;
+    formality_variance_inv: number;
+    clip_text_similarity:   number;
+    category_balance:       number;
+  };
+  warnings:     string[];
+  model_active: boolean;
+}
+
 /** Catalog item sent to Python's /hairstyle/recommend */
 interface HairstyleCatalogItem {
   id:        string;
@@ -174,6 +207,50 @@ export class PythonAiService {
       return (await res.json()) as GarmentAnalysisResult;
     } catch (err) {
       this.logger.warn(`Python service /garment/analyze failed: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  // ─── Training ─────────────────────────────────────────────────────────────
+
+  async triggerRetraining(): Promise<RetrainingResult | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/training/run`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(120_000),
+      });
+      if (!res.ok) {
+        this.logger.warn(`/training/run returned HTTP ${res.status}`);
+        return null;
+      }
+      return (await res.json()) as RetrainingResult;
+    } catch (err) {
+      this.logger.warn(`Python service /training/run failed: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  // ─── Outfit Compatibility ──────────────────────────────────────────────────
+
+  async scoreOutfitCompatibility(
+    garments: Array<{ category: string; description: string }>,
+    event:    string,
+  ): Promise<OutfitCompatibilityResult | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/outfit/score`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ garments, event }),
+        signal:  AbortSignal.timeout(5_000),
+      });
+
+      if (!res.ok) {
+        this.logger.warn(`/outfit/score returned HTTP ${res.status}`);
+        return null;
+      }
+      return (await res.json()) as OutfitCompatibilityResult;
+    } catch (err) {
+      this.logger.warn(`Python service /outfit/score failed: ${(err as Error).message}`);
       return null;
     }
   }
