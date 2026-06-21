@@ -1,0 +1,54 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # every day at 3:00 UTC
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual backup'
+        required: false
+        default: 'Manual backup via app'
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Create backup
+        env:
+          PGPASSWORD: ''
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          FILENAME="backup-${TIMESTAMP}.sql"
+          pg_dump "${{ secrets.DATABASE_MIGRATION_URL }}" \
+            --no-password \
+            --format=plain \
+            --no-owner \
+            --no-acl \
+            > "$FILENAME"
+          gzip "$FILENAME"
+          SIZE=$(du -sh "${FILENAME}.gz" | cut -f1)
+          echo "BACKUP_FILE=${FILENAME}.gz" >> "$GITHUB_ENV"
+          echo "BACKUP_SIZE=${SIZE}" >> "$GITHUB_ENV"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}-${{ github.run_id }}
+          path: "*.sql.gz"
+          retention-days: 90
+
+      - name: Summary
+        run: |
+          echo "## Backup completado" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Archivo | \`$BACKUP_FILE\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tamaño | $BACKUP_SIZE |" >> $GITHUB_STEP_SUMMARY
+          echo "| Retención | 90 días |" >> $GITHUB_STEP_SUMMARY
+          echo "| Motivo | ${{ github.event.inputs.reason || 'Programado automáticamente' }} |" >> $GITHUB_STEP_SUMMARY

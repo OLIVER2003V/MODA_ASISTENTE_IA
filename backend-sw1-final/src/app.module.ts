@@ -11,11 +11,12 @@ import { InAppNotificationModule } from './common/in-app-notification/in-app-not
 import { AiModule } from './features/ai/ai.module';
 import { PostModule } from './features/post/post.module';
 import { ChatModule } from './features/chat/chat.module';
-import { HairstyleModule }       from './features/hairstyle/hairstyle.module';
-import { SocialBrandingModule }  from './features/social-branding/social-branding.module';
-import { SubscriptionModule }    from './features/subscription/subscription.module';
-import { DmModule }              from './features/dm/dm.module';
-import { NotificationModule }    from './features/notification/notification.module';
+import { HairstyleModule } from './features/hairstyle/hairstyle.module';
+import { SocialBrandingModule } from './features/social-branding/social-branding.module';
+import { SubscriptionModule } from './features/subscription/subscription.module';
+import { DmModule } from './features/dm/dm.module';
+import { NotificationModule } from './features/notification/notification.module';
+import { AdminModule } from './features/admin/admin.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { NotificationModule }    from './features/notification/notification.modu
     SubscriptionModule,
     DmModule,
     NotificationModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],
