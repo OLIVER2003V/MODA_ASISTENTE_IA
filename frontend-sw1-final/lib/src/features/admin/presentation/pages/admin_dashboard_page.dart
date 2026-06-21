@@ -398,8 +398,7 @@ class _UsersTabState extends State<_UsersTab> {
                     DataColumn(label: Text('Email', style: TextStyle(fontWeight: FontWeight.w600))),
                     DataColumn(label: Text('Rol', style: TextStyle(fontWeight: FontWeight.w600))),
                     DataColumn(label: Text('Plan', style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(label: Text('Prendas', style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(label: Text('Outfits', style: TextStyle(fontWeight: FontWeight.w600))),
+                    DataColumn(label: Text('Armarios', style: TextStyle(fontWeight: FontWeight.w600))),
                     DataColumn(label: Text('Registro', style: TextStyle(fontWeight: FontWeight.w600))),
                     DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.w600))),
                   ],
@@ -419,8 +418,7 @@ class _UsersTabState extends State<_UsersTab> {
                     DataCell(Text(u.email, style: const TextStyle(fontSize: 13))),
                     DataCell(_RoleBadge(u.role)),
                     DataCell(_PlanBadge(u.subscriptionStatus)),
-                    DataCell(Text('${u.garments}', textAlign: TextAlign.center)),
-                    DataCell(Text('${u.outfits}', textAlign: TextAlign.center)),
+                    DataCell(Text('${u.closets}', textAlign: TextAlign.center)),
                     DataCell(Text(DateFormat('dd/MM/yy').format(u.createdAt))),
                     DataCell(Row(children: [
                       Tooltip(

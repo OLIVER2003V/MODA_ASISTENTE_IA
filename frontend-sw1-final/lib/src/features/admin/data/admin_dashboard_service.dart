@@ -36,13 +36,13 @@ class AdminUser {
   final String role, subscriptionStatus;
   final bool isActive;
   final DateTime createdAt;
-  final int garments, outfits, posts;
+  final int closets, posts;
 
   const AdminUser({
     required this.id, required this.email, this.name, this.profilePhoto,
     required this.role, required this.subscriptionStatus,
     required this.isActive, required this.createdAt,
-    required this.garments, required this.outfits, required this.posts,
+    required this.closets, required this.posts,
   });
 
   factory AdminUser.fromJson(Map<String, dynamic> j) {
@@ -56,8 +56,7 @@ class AdminUser {
       subscriptionStatus: j['subscriptionStatus'] as String? ?? 'FREE',
       isActive: j['isActive'] as bool? ?? true,
       createdAt: DateTime.parse(j['createdAt'] as String),
-      garments: count['garments'] as int? ?? 0,
-      outfits: count['outfits'] as int? ?? 0,
+      closets: count['closets'] as int? ?? 0,
       posts: count['posts'] as int? ?? 0,
     );
   }

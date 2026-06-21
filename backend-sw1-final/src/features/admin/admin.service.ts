@@ -121,7 +121,7 @@ export class AdminService {
           profilePhoto: true,
           createdAt: true,
           _count: {
-            select: { garments: true, outfits: true, posts: true },
+            select: { posts: true, closets: true },
           },
           subscription: { select: { status: true } },
         },
@@ -130,11 +130,13 @@ export class AdminService {
     ]);
 
     return {
-      users: users.map((u) => ({
-        ...u,
-        subscriptionStatus: u.subscription?.status ?? 'FREE',
-        subscription: undefined,
-      })),
+      users: users.map((u) => {
+        const { subscription, ...rest } = u;
+        return {
+          ...rest,
+          subscriptionStatus: subscription?.status ?? 'FREE',
+        };
+      }),
       total,
       page,
       pages: Math.ceil(total / limit),
@@ -220,7 +222,6 @@ export class AdminService {
             name: true,
             score: true,
             createdAt: true,
-            user: { select: { email: true, name: true } },
           },
         }),
         this.prisma.post.findMany({
@@ -252,7 +253,7 @@ export class AdminService {
       ...recentOutfits.map((o) => ({
         type: 'OUTFIT_CREATE',
         label: `Outfit generado: ${o.name ?? 'Sin nombre'}`,
-        detail: o.user?.email ?? '',
+        detail: `score: ${o.score}`,
         icon: 'checkroom',
         createdAt: o.createdAt.toISOString(),
       })),
