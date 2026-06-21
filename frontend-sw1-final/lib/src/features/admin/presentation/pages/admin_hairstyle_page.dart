@@ -270,7 +270,6 @@ class _AdminHairstylePageState extends State<AdminHairstylePage> {
             ),
           ],
         ),
-      ),
     );
 
     if (widget.embedded) return content;
