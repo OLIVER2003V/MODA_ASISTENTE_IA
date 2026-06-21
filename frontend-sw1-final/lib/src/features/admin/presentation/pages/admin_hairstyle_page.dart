@@ -7,7 +7,10 @@ import '../../../../core/services/hairstyle_service.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class AdminHairstylePage extends StatefulWidget {
-  const AdminHairstylePage({super.key});
+  const AdminHairstylePage({super.key, this.embedded = false});
+
+  /// When true, the page is shown inside the dashboard (no AppBar scaffold).
+  final bool embedded;
 
   @override
   State<AdminHairstylePage> createState() => _AdminHairstylePageState();
@@ -60,15 +63,10 @@ class _AdminHairstylePageState extends State<AdminHairstylePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestión de Peinados'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final content = SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Info card ──────────────────────────────────────────────────────
             Container(
@@ -273,6 +271,13 @@ class _AdminHairstylePageState extends State<AdminHairstylePage> {
           ],
         ),
       ),
+    );
+
+    if (widget.embedded) return content;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Gestión de Peinados'), centerTitle: true),
+      body: content,
     );
   }
 }

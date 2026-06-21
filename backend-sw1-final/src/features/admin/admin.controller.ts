@@ -1,12 +1,16 @@
-import { Controller, Post, Get, Body, UseGuards, Headers } from '@nestjs/common';
+import {
+  Controller, Post, Get, Patch, Body, Param,
+  UseGuards, Headers, Query,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from 'src/common/guards/admin.guard';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  // No requiere JWT — usa secret header para bootstrap del primer admin
+  // Bootstrap — no requiere JWT, usa secret header
   @Post('promote')
   promoteToAdmin(
     @Body('email') email: string,
@@ -15,14 +19,56 @@ export class AdminController {
     return this.adminService.promoteToAdmin(email, secret);
   }
 
+  // ── Dashboard (todos requieren JWT + AdminGuard) ───────────────────────────
+
+  @Get('stats')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getStats() {
+    return this.adminService.getStats();
+  }
+
+  @Get('users')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getUsers(
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+    @Query('search') search = '',
+    @Query('role') role = '',
+  ) {
+    return this.adminService.getUsers(+page, +limit, search, role);
+  }
+
+  @Patch('users/:id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  updateUser(
+    @Param('id') id: string,
+    @Body() body: { role?: string; isActive?: boolean },
+  ) {
+    return this.adminService.updateUser(id, body as any);
+  }
+
+  @Get('reports')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getReports() {
+    return this.adminService.getReports();
+  }
+
+  @Get('activity')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getActivity() {
+    return this.adminService.getActivity();
+  }
+
+  // ── Backup ────────────────────────────────────────────────────────────────
+
   @Post('backup/trigger')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   triggerBackup(@Body('reason') reason?: string) {
     return this.adminService.triggerBackup(reason);
   }
 
   @Get('backup/list')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   listBackups() {
     return this.adminService.listBackups();
   }

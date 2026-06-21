@@ -371,10 +371,10 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 _buildSettingsTile(
                   context,
-                  icon: Icons.content_cut,
-                  title: 'Gestionar peinados',
-                  subtitle: 'Subir y eliminar peinados del catálogo',
-                  onTap: () => context.push(RoutePath.adminHairstyles),
+                  icon: Icons.admin_panel_settings,
+                  title: 'Panel de administración',
+                  subtitle: 'Usuarios, reportes, peinados y bitácora',
+                  onTap: () => context.push(RoutePath.adminDashboard),
                   trailing: Icon(
                     Icons.chevron_right,
                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
