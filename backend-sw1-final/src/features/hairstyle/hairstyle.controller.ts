@@ -19,13 +19,14 @@ import { UploadHairstylesDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards';
 import { GetUser } from '../auth/decorators';
 import { PremiumGuard } from 'src/common/guards/premium.guard';
+import { AdminGuard } from 'src/common/guards/admin.guard';
 
 @Controller('hairstyle')
 export class HairstyleController {
   constructor(private readonly hairstyleService: HairstyleService) {}
 
   @Post('upload')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @UseInterceptors(FilesInterceptor('files', 20))
   async upload(
     @Body() dto: UploadHairstylesDto,
@@ -108,7 +109,7 @@ export class HairstyleController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id') id: string) {
     return this.hairstyleService.remove(id);
   }

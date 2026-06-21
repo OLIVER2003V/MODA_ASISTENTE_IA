@@ -144,6 +144,49 @@ class HairstyleService {
     }
   }
 
+  /// Sube imágenes al catálogo de peinados (solo Admin)
+  static Future<List<HairstyleItem>> uploadHairstyles(
+    List<File> files,
+    String gender,
+  ) async {
+    final token = await StorageService.getToken();
+    if (token == null) throw Exception('No hay token de autenticación');
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/hairstyle/upload'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields['gender'] = gender;
+    for (final file in files) {
+      request.files.add(await http.MultipartFile.fromPath('files', file.path));
+    }
+
+    final streamed = await request.send().timeout(const Duration(minutes: 5));
+    final res = await http.Response.fromStream(streamed);
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final list = json.decode(res.body) as List<dynamic>;
+      return list
+          .map((e) => HairstyleItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    final err = json.decode(res.body);
+    throw Exception(err['message'] ?? 'Error al subir peinados');
+  }
+
+  /// Elimina un peinado del catálogo (solo Admin)
+  static Future<void> deleteHairstyle(String id) async {
+    final res = await http.delete(
+      Uri.parse('$baseUrl/hairstyle/$id'),
+      headers: await _authHeaders,
+    );
+    if (res.statusCode != 200 && res.statusCode != 204) {
+      final err = json.decode(res.body);
+      throw Exception(err['message'] ?? 'Error al eliminar peinado');
+    }
+  }
+
   /// Recomienda peinados según foto del rostro (Premium)
   static Future<HairstyleRecommendResult> recommend(File imageFile) async {
     final token = await StorageService.getToken();

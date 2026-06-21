@@ -6,6 +6,7 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/home/presentation/pages/main_page.dart';
 import '../../features/profile/presentation/pages/user_attributes_onboarding_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/admin/presentation/pages/admin_hairstyle_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -46,6 +47,11 @@ class AppRouter {
         name: AppRoute.settings.name,
         builder: (context, state) => const SettingsPage(),
       ),
+      GoRoute(
+        path: RoutePath.adminHairstyles,
+        name: AppRoute.adminHairstyles.name,
+        builder: (context, state) => const AdminHairstylePage(),
+      ),
     ],
   );
 }
@@ -59,6 +65,7 @@ class RoutePath {
   static const String main = '/main';
   static const String onboarding = '/onboarding';
   static const String settings = '/settings';
+  static const String adminHairstyles = '/admin/hairstyles';
 }
 
-enum AppRoute { splash, login, register, main, onboarding, settings }
+enum AppRoute { splash, login, register, main, onboarding, settings, adminHairstyles }

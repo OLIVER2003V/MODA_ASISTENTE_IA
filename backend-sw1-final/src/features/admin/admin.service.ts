@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 
 export interface BackupRun {
   id: number;
@@ -18,6 +19,24 @@ export interface TriggerResult {
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  async promoteToAdmin(email: string, secret: string): Promise<{ email: string; role: string }> {
+    const expected = process.env.ADMIN_PROMOTE_SECRET;
+    if (!expected || secret !== expected) {
+      throw new ForbiddenException('Invalid promote secret');
+    }
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundException(`User ${email} not found`);
+    const updated = await this.prisma.user.update({
+      where: { email },
+      data: { role: 'ADMIN' },
+      select: { email: true, role: true },
+    });
+    this.logger.log(`Promoted ${email} to ADMIN`);
+    return updated;
+  }
 
   private readonly owner = 'OLIVER2003V';
   private readonly repo = 'MODA_ASISTENTE_IA';

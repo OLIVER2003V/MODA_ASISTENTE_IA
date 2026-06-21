@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../app/app.dart';
+import '../../../../app/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/theme_service.dart';
 import '../../../../core/services/storage_service.dart';
@@ -11,6 +12,7 @@ import '../../../../core/services/outfit_service.dart';
 import '../../../../core/services/admin_service.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/locale_provider.dart';
+import '../../../../features/auth/data/models/user_model.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -22,11 +24,15 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _isRetraining = false;
   bool _isBackingUp  = false;
+  User? _currentUser;
 
   @override
   void initState() {
     super.initState();
     App.themeService.addListener(_onThemeChanged);
+    StorageService.getUser().then((u) {
+      if (mounted) setState(() => _currentUser = u);
+    });
   }
 
   @override
@@ -355,6 +361,29 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
 
           const SizedBox(height: 24),
+
+          // ── Administración (solo visible para ADMIN) ─────────────────────
+          if (_currentUser?.isAdmin == true) ...[
+            _buildSectionHeader(context, 'Administración'),
+            const SizedBox(height: 12),
+            _buildSettingsCard(
+              context,
+              children: [
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.content_cut,
+                  title: 'Gestionar peinados',
+                  subtitle: 'Subir y eliminar peinados del catálogo',
+                  onTap: () => context.push(RoutePath.adminHairstyles),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
 
           // ── Información ─────────────────────────────────────────────────
           _buildSectionHeader(context, _l10n.information),
