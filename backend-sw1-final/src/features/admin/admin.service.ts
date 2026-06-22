@@ -279,6 +279,232 @@ export class AdminService {
     return { events: events.slice(0, 25) };
   }
 
+  // ── Advanced metrics ─────────────────────────────────────────────────────
+
+  async getMetrics() {
+    const now = new Date();
+
+    const startOf = (daysAgo: number, hour = 0) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - daysAgo);
+      d.setHours(hour, 0, 0, 0);
+      return d;
+    };
+
+    const todayStart  = startOf(0);
+    const weekStart   = startOf(7);
+    const monthStart  = startOf(30);
+    const prevWeekStart  = startOf(14);
+    const prevMonthStart = startOf(60);
+
+    const [
+      usersToday, usersThisWeek, usersThisMonth,
+      usersPrevWeek, usersPrevMonth,
+      outfitsToday, outfitsThisWeek,
+      outfitsPrevWeek,
+      postsToday, postsThisWeek,
+      postsPrevWeek,
+      activeThisWeek,
+    ] = await Promise.all([
+      this.prisma.user.count({ where: { createdAt: { gte: todayStart } } }),
+      this.prisma.user.count({ where: { createdAt: { gte: weekStart } } }),
+      this.prisma.user.count({ where: { createdAt: { gte: monthStart } } }),
+      this.prisma.user.count({ where: { createdAt: { gte: prevWeekStart, lt: weekStart } } }),
+      this.prisma.user.count({ where: { createdAt: { gte: prevMonthStart, lt: monthStart } } }),
+      this.prisma.outfit.count({ where: { createdAt: { gte: todayStart } } }),
+      this.prisma.outfit.count({ where: { createdAt: { gte: weekStart } } }),
+      this.prisma.outfit.count({ where: { createdAt: { gte: prevWeekStart, lt: weekStart } } }),
+      this.prisma.post.count({ where: { createdAt: { gte: todayStart } } }),
+      this.prisma.post.count({ where: { createdAt: { gte: weekStart } } }),
+      this.prisma.post.count({ where: { createdAt: { gte: prevWeekStart, lt: weekStart } } }),
+      this.prisma.post.count({ where: { createdAt: { gte: weekStart } } }),
+    ]);
+
+    const pct = (cur: number, prev: number) =>
+      prev === 0 ? (cur > 0 ? 100 : 0) : Math.round(((cur - prev) / prev) * 100);
+
+    // 30-day daily series
+    const days30 = Array.from({ length: 30 }, (_, i) => startOf(29 - i));
+    const [series30Users, series30Outfits, series30Posts] = await Promise.all([
+      Promise.all(days30.map((d, i) => {
+        const next = days30[i + 1] ?? now;
+        return this.prisma.user.count({ where: { createdAt: { gte: d, lt: next } } });
+      })),
+      Promise.all(days30.map((d, i) => {
+        const next = days30[i + 1] ?? now;
+        return this.prisma.outfit.count({ where: { createdAt: { gte: d, lt: next } } });
+      })),
+      Promise.all(days30.map((d, i) => {
+        const next = days30[i + 1] ?? now;
+        return this.prisma.post.count({ where: { createdAt: { gte: d, lt: next } } });
+      })),
+    ]);
+
+    const labels30 = days30.map((d) =>
+      d.toLocaleDateString('es', { day: 'numeric', month: 'short' }),
+    );
+
+    return {
+      kpis: {
+        usersToday,    usersThisWeek,    usersThisMonth,
+        outfitsToday,  outfitsThisWeek,
+        postsToday,    postsThisWeek,    activeThisWeek,
+        weekVsPrev: {
+          users:   pct(usersThisWeek,   usersPrevWeek),
+          outfits: pct(outfitsThisWeek, outfitsPrevWeek),
+          posts:   pct(postsThisWeek,   postsPrevWeek),
+        },
+        monthVsPrev: {
+          users: pct(usersThisMonth, usersPrevMonth),
+        },
+      },
+      series: { labels: labels30, users: series30Users, outfits: series30Outfits, posts: series30Posts },
+    };
+  }
+
+  // ── Revenue ───────────────────────────────────────────────────────────────
+
+  async getRevenue() {
+    const now = new Date();
+    const monthStart = new Date(now); monthStart.setDate(monthStart.getDate() - 30); monthStart.setHours(0,0,0,0);
+    const prevMonthStart = new Date(now); prevMonthStart.setDate(prevMonthStart.getDate() - 60); prevMonthStart.setHours(0,0,0,0);
+
+    const [paymentsAll, paymentsMonth, paymentsPrevMonth, recentPayments, premiumUsers, totalUsers] = await Promise.all([
+      this.prisma.payment.aggregate({ where: { status: 'SUCCEEDED' }, _sum: { amount: true } }),
+      this.prisma.payment.aggregate({ where: { status: 'SUCCEEDED', createdAt: { gte: monthStart } }, _sum: { amount: true } }),
+      this.prisma.payment.aggregate({ where: { status: 'SUCCEEDED', createdAt: { gte: prevMonthStart, lt: monthStart } }, _sum: { amount: true } }),
+      this.prisma.payment.findMany({
+        where: { status: 'SUCCEEDED' },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, amount: true, currency: true, createdAt: true, user: { select: { email: true, name: true } } },
+      }),
+      this.prisma.subscription.count({ where: { status: 'PREMIUM' } }),
+      this.prisma.user.count(),
+    ]);
+
+    // 14-day daily revenue series
+    const days14 = Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(now); d.setDate(d.getDate() - (13 - i)); d.setHours(0,0,0,0); return d;
+    });
+    const dailyRevenue = await Promise.all(days14.map((d, i) => {
+      const next = days14[i + 1] ?? now;
+      return this.prisma.payment.aggregate({ where: { status: 'SUCCEEDED', createdAt: { gte: d, lt: next } }, _sum: { amount: true } });
+    }));
+
+    const totalAll    = (paymentsAll._sum.amount ?? 0) / 100;
+    const totalMonth  = (paymentsMonth._sum.amount ?? 0) / 100;
+    const totalPrev   = (paymentsPrevMonth._sum.amount ?? 0) / 100;
+    const pct = totalPrev === 0 ? (totalMonth > 0 ? 100 : 0) : Math.round(((totalMonth - totalPrev) / totalPrev) * 100);
+
+    return {
+      totalAllTime: totalAll,
+      totalThisMonth: totalMonth,
+      monthVsPrev: pct,
+      conversionRate: totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 1000) / 10 : 0,
+      premiumUsers,
+      freeUsers: totalUsers - premiumUsers,
+      recentPayments: recentPayments.map((p) => ({
+        id: p.id,
+        amount: p.amount / 100,
+        currency: p.currency,
+        createdAt: p.createdAt.toISOString(),
+        userEmail: p.user?.email ?? '',
+        userName: p.user?.name ?? '',
+      })),
+      dailySeries: {
+        labels: days14.map((d) => d.toLocaleDateString('es', { day: 'numeric', month: 'short' })),
+        amounts: dailyRevenue.map((r) => (r._sum.amount ?? 0) / 100),
+      },
+    };
+  }
+
+  // ── Engagement ────────────────────────────────────────────────────────────
+
+  async getEngagement() {
+    const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 7); weekStart.setHours(0,0,0,0);
+
+    const [topPosts, topHairstyles, commentsThisWeek, reactionsThisWeek, totalComments, totalReactions] = await Promise.all([
+      this.prisma.post.findMany({
+        take: 5,
+        orderBy: { reactionCount: 'desc' },
+        select: { id: true, imageUrl: true, caption: true, reactionCount: true, commentCount: true, createdAt: true, user: { select: { email: true, name: true } } },
+      }),
+      this.prisma.hairstyle.findMany({
+        take: 5,
+        orderBy: { favorites: { _count: 'desc' } },
+        select: { id: true, imageUrl: true, description: true, gender: true, _count: { select: { favorites: true } } },
+      }),
+      this.prisma.comment.count({ where: { createdAt: { gte: weekStart } } }),
+      this.prisma.postInteraction.count({ where: { createdAt: { gte: weekStart } } }),
+      this.prisma.comment.count(),
+      this.prisma.postInteraction.count(),
+    ]);
+
+    const totalPosts = await this.prisma.post.count();
+    const avgReactions = totalPosts > 0 ? Math.round((totalReactions / totalPosts) * 10) / 10 : 0;
+    const avgComments  = totalPosts > 0 ? Math.round((totalComments  / totalPosts) * 10) / 10 : 0;
+
+    return {
+      topPosts: topPosts.map((p) => ({
+        id: p.id,
+        imageUrl: p.imageUrl,
+        caption: p.caption ?? '',
+        reactions: p.reactionCount,
+        comments: p.commentCount,
+        userEmail: p.user?.email ?? '',
+        userName: p.user?.name ?? '',
+        createdAt: p.createdAt.toISOString(),
+      })),
+      topHairstyles: topHairstyles.map((h) => ({
+        id: h.id,
+        imageUrl: h.imageUrl,
+        description: h.description,
+        gender: h.gender,
+        favorites: h._count.favorites,
+      })),
+      stats: { commentsThisWeek, reactionsThisWeek, avgReactions, avgComments, totalComments, totalReactions },
+    };
+  }
+
+  // ── Segments ──────────────────────────────────────────────────────────────
+
+  async getSegments() {
+    const attrs = await this.prisma.userAttribute.findMany({
+      select: { gender: true, age: true, bodyType: true, skinTone: true, hairColor: true },
+    });
+
+    const count = <T extends string>(field: (a: typeof attrs[0]) => T | null | undefined) => {
+      const map: Record<string, number> = {};
+      for (const a of attrs) {
+        const v = field(a) ?? 'Sin datos';
+        map[v] = (map[v] ?? 0) + 1;
+      }
+      return Object.entries(map).sort((x, y) => y[1] - x[1]).map(([label, value]) => ({ label, value }));
+    };
+
+    const ageGroups = { '18-25': 0, '26-35': 0, '36-45': 0, '46+': 0, 'Sin datos': 0 };
+    for (const a of attrs) {
+      if (!a.age) { ageGroups['Sin datos']++; continue; }
+      if (a.age <= 25) ageGroups['18-25']++;
+      else if (a.age <= 35) ageGroups['26-35']++;
+      else if (a.age <= 45) ageGroups['36-45']++;
+      else ageGroups['46+']++;
+    }
+
+    const totalUsers = await this.prisma.user.count();
+    const withProfile = attrs.length;
+
+    return {
+      profileCompletion: { withProfile, withoutProfile: totalUsers - withProfile, total: totalUsers },
+      gender:   count((a) => a.gender),
+      bodyType: count((a) => a.bodyType),
+      skinTone: count((a) => a.skinTone),
+      hairColor: count((a) => a.hairColor),
+      ageGroups: Object.entries(ageGroups).map(([label, value]) => ({ label, value })),
+    };
+  }
+
   async triggerBackup(
     reason = 'Manual backup via app',
   ): Promise<TriggerResult> {

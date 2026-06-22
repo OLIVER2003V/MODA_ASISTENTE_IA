@@ -53,6 +53,30 @@ export class AdminController {
     return this.adminService.getReports();
   }
 
+  @Get('metrics')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getMetrics() {
+    return this.adminService.getMetrics();
+  }
+
+  @Get('revenue')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getRevenue() {
+    return this.adminService.getRevenue();
+  }
+
+  @Get('engagement')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getEngagement() {
+    return this.adminService.getEngagement();
+  }
+
+  @Get('segments')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getSegments() {
+    return this.adminService.getSegments();
+  }
+
   @Get('activity')
   @UseGuards(JwtAuthGuard, AdminGuard)
   getActivity() {

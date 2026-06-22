@@ -165,6 +165,30 @@ class AdminDashboardService {
     return (data['events'] as List).map((e) => ActivityEvent.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  static Future<Map<String, dynamic>> getMetrics() async {
+    final res = await http.get(Uri.parse('$_base/admin/metrics'), headers: await _headers);
+    _check(res);
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> getRevenue() async {
+    final res = await http.get(Uri.parse('$_base/admin/revenue'), headers: await _headers);
+    _check(res);
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> getEngagement() async {
+    final res = await http.get(Uri.parse('$_base/admin/engagement'), headers: await _headers);
+    _check(res);
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> getSegments() async {
+    final res = await http.get(Uri.parse('$_base/admin/segments'), headers: await _headers);
+    _check(res);
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
   static void _check(http.Response res) {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final msg = (json.decode(res.body) as Map<String, dynamic>)['message'] ?? 'Error';
