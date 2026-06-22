@@ -325,45 +325,43 @@ class _SettingsPageState extends State<SettingsPage> {
 
           const SizedBox(height: 24),
 
-          // ── Respaldo de datos ────────────────────────────────────────────
-          _buildSectionHeader(context, 'Respaldo de datos'),
-          const SizedBox(height: 12),
-          _buildSettingsCard(
-            context,
-            children: [
-              _buildSettingsTile(
-                context,
-                icon: Icons.backup_outlined,
-                title: 'Crear respaldo ahora',
-                subtitle: 'Exporta la base de datos completa a GitHub',
-                onTap: _isBackingUp ? null : _triggerBackup,
-                trailing: _isBackingUp
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(Icons.chevron_right,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.3)),
-              ),
-              const Divider(height: 1, indent: 56),
-              _buildSettingsTile(
-                context,
-                icon: Icons.history_outlined,
-                title: 'Historial de respaldos',
-                subtitle: 'Ver los últimos respaldos realizados',
-                onTap: _showBackupHistory,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
           // ── Administración (solo visible para ADMIN) ─────────────────────
           if (_currentUser?.isAdmin == true) ...[
+            // Respaldo de datos
+            _buildSectionHeader(context, 'Respaldo de datos'),
+            const SizedBox(height: 12),
+            _buildSettingsCard(
+              context,
+              children: [
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.backup_outlined,
+                  title: 'Crear respaldo ahora',
+                  subtitle: 'Exporta la base de datos completa a GitHub',
+                  onTap: _isBackingUp ? null : _triggerBackup,
+                  trailing: _isBackingUp
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(Icons.chevron_right,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.3)),
+                ),
+                const Divider(height: 1, indent: 56),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.history_outlined,
+                  title: 'Historial de respaldos',
+                  subtitle: 'Ver los últimos respaldos realizados',
+                  onTap: _showBackupHistory,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
             _buildSectionHeader(context, 'Administración'),
             const SizedBox(height: 12),
             _buildSettingsCard(
