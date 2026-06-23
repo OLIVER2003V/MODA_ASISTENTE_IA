@@ -5,6 +5,9 @@ import { Category } from 'generated/prisma/enums';
 export class UpdateGarmentDto {
   @ApiPropertyOptional() @IsString() @IsOptional() name?: string;
   @ApiPropertyOptional() @IsString() @IsOptional() pathLocal?: string;
-  @ApiPropertyOptional({ enum: Category }) @IsEnum(Category) @IsOptional() category?: Category;
+  @ApiPropertyOptional({ enum: Category })
+  @IsEnum(Category)
+  @IsOptional()
+  category?: Category;
   @ApiPropertyOptional() @IsString() @IsOptional() description?: string;
 }

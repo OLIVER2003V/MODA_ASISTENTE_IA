@@ -42,7 +42,10 @@ export class ChatController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
-    if (user.id !== userId) throw new ForbiddenException('No tienes permiso para ver estas conversaciones');
+    if (user.id !== userId)
+      throw new ForbiddenException(
+        'No tienes permiso para ver estas conversaciones',
+      );
     return this.chatService.getConversationsByUser(userId, page, limit);
   }
 
@@ -82,7 +85,9 @@ export class ChatController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 25 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: /(m4a|mp4|mp3|wav|webm|ogg|aac|mpeg)$/i }),
+          new FileTypeValidator({
+            fileType: /(m4a|mp4|mp3|wav|webm|ogg|aac|mpeg)$/i,
+          }),
         ],
       }),
     )
@@ -92,10 +97,7 @@ export class ChatController {
   }
 
   @Delete('conversations/:id')
-  async deleteConversation(
-    @GetUser() user: any,
-    @Param('id') id: string,
-  ) {
+  async deleteConversation(@GetUser() user: any, @Param('id') id: string) {
     return this.chatService.deleteConversation(user.id, id);
   }
 }

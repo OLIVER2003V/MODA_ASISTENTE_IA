@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Param, Body } from '@nestjs/common';
-import { DmService }  from './dm.service';
-import { Auth }       from '../auth/decorators/auth.decorator';
-import { GetUser }    from '../auth/decorators/get-user.decorator';
-import { User }       from 'generated/prisma/client';
+import { DmService } from './dm.service';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { GetUser } from '../auth/decorators/get-user.decorator';
+import { User } from 'generated/prisma/client';
 import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
 
 class SendMessageDto {
@@ -30,7 +30,10 @@ export class DmController {
   }
 
   @Get(':conversationId/messages')
-  getMessages(@Param('conversationId') conversationId: string, @GetUser() user: User) {
+  getMessages(
+    @Param('conversationId') conversationId: string,
+    @GetUser() user: User,
+  ) {
     return this.dmService.getMessages(conversationId, user.id);
   }
 

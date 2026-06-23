@@ -3,6 +3,6 @@ import { PythonAiService } from './python-ai.service';
 
 @Module({
   providers: [PythonAiService],
-  exports:   [PythonAiService],
+  exports: [PythonAiService],
 })
 export class PythonAiModule {}

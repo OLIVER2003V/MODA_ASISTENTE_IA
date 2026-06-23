@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
@@ -35,10 +40,10 @@ export class AuthService {
     });
 
     // Generate JWT token
-    const access_token = await this.generateJwtToken(user);
+    const access_token = this.generateJwtToken(user);
 
     // Return user data without password
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _pw, ...userWithoutPassword } = user;
 
     return {
       access_token,
@@ -56,16 +61,19 @@ export class AuthService {
     }
 
     // Validate credentials using bcrypt comparison
-    const isPasswordValid = await this.usersService.comparePasswords(password, user.password);
+    const isPasswordValid = await this.usersService.comparePasswords(
+      password,
+      user.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Generate JWT token for valid credentials
-    const access_token = await this.generateJwtToken(user);
+    const access_token = this.generateJwtToken(user);
 
     // Return user data without password
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _pw, ...userWithoutPassword } = user;
 
     return {
       access_token,
@@ -73,7 +81,7 @@ export class AuthService {
     };
   }
 
-  async generateJwtToken(user: User): Promise<string> {
+  generateJwtToken(user: User): string {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,

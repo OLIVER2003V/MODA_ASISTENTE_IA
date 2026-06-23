@@ -26,7 +26,9 @@ export class UserAttributeService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException(`Usuario ${userId} no encontrado`);
 
-    const attrs = await this.prisma.userAttribute.findUnique({ where: { userId } });
+    const attrs = await this.prisma.userAttribute.findUnique({
+      where: { userId },
+    });
     return attrs ?? null;
   }
 
@@ -52,12 +54,21 @@ export class UserAttributeService {
   }
 
   async uploadBodyPhoto(userId: string, file: Express.Multer.File) {
-    const userAttr = await this.prisma.userAttribute.findUnique({ where: { userId } });
-    if (!userAttr) throw new NotFoundException(`Atributos del usuario ${userId} no encontrados`);
+    const userAttr = await this.prisma.userAttribute.findUnique({
+      where: { userId },
+    });
+    if (!userAttr)
+      throw new NotFoundException(
+        `Atributos del usuario ${userId} no encontrados`,
+      );
 
     // Eliminar foto anterior si existe
     if (userAttr.bodyPhotoPath) {
-      try { await this.storage.deleteFile(userAttr.bodyPhotoPath); } catch { /* ignorar si no existe */ }
+      try {
+        await this.storage.deleteFile(userAttr.bodyPhotoPath);
+      } catch {
+        /* ignorar si no existe */
+      }
     }
 
     const uploaded = await this.storage.uploadFile(file, 'body-photos');
@@ -70,7 +81,9 @@ export class UserAttributeService {
   }
 
   async getBodyPhotoUrl(userId: string): Promise<string | null> {
-    const userAttr = await this.prisma.userAttribute.findUnique({ where: { userId } });
+    const userAttr = await this.prisma.userAttribute.findUnique({
+      where: { userId },
+    });
     if (!userAttr) return null;
     // Return stored URL directly — avoids Cloudinary management API rate limits
     return userAttr.bodyPhotoUrl ?? null;

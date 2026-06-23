@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateClosetDto } from './dto/create-closet.dto';
 import { UpdateClosetDto } from './dto/update-closet.dto';
 import { PrismaService } from 'src/common/prisma/prisma.service';
@@ -18,7 +22,9 @@ export class ClosetService {
     const closet = await this.prisma.closet.findFirst({ where: { userId } });
     if (!closet) throw new NotFoundException('No hay closet para este usuario');
 
-    const garments = await this.prisma.garment.findMany({ where: { closetId: closet.id } });
+    const garments = await this.prisma.garment.findMany({
+      where: { closetId: closet.id },
+    });
     return { closet, garments };
   }
 
@@ -41,14 +47,16 @@ export class ClosetService {
   async update(id: string, dto: UpdateClosetDto, userId: string) {
     const closet = await this.prisma.closet.findUnique({ where: { id } });
     if (!closet) throw new NotFoundException('Closet no encontrado');
-    if (closet.userId !== userId) throw new ForbiddenException('No podés modificar este closet');
+    if (closet.userId !== userId)
+      throw new ForbiddenException('No podés modificar este closet');
     return this.prisma.closet.update({ where: { id }, data: dto });
   }
 
   async remove(id: string, userId: string) {
     const closet = await this.prisma.closet.findUnique({ where: { id } });
     if (!closet) throw new NotFoundException('Closet no encontrado');
-    if (closet.userId !== userId) throw new ForbiddenException('No podés eliminar este closet');
+    if (closet.userId !== userId)
+      throw new ForbiddenException('No podés eliminar este closet');
     await this.prisma.closet.delete({ where: { id } });
     return { message: 'Closet eliminado' };
   }

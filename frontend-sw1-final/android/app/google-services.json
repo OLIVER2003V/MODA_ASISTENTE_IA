@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "575537780527",
-    "project_id": "proyecto-final-1a2f0",
-    "storage_bucket": "proyecto-final-1a2f0.firebasestorage.app"
+    "project_number": "556467142214",
+    "project_id": "proyecto-grupal-moda",
+    "storage_bucket": "proyecto-grupal-moda.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:575537780527:android:af0eccfc757b1e4739f3da",
+        "mobilesdk_app_id": "1:556467142214:android:41ca592164abc920a11447",
         "android_client_info": {
           "package_name": "com.example.mobile"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCOrMjluc3neUj9iEdCcK6-IvUjE2TB-6Y"
+          "current_key": "AIzaSyAV8wg4jN9OczmYESqQ6GaAfkQ1Q1pwtpU"
         }
       ],
       "services": {

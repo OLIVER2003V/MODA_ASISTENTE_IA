@@ -6,9 +6,23 @@ import { PrismaService } from '../prisma/prisma.service';
 export class InAppNotificationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, type: string, title: string, body: string, data?: Record<string, unknown>) {
+  async create(
+    userId: string,
+    type: string,
+    title: string,
+    body: string,
+    data?: Record<string, unknown>,
+  ) {
     return this.prisma.inAppNotification.create({
-      data: { userId, type, title, body, data: data ? (structuredClone(data) as Prisma.InputJsonValue) : undefined },
+      data: {
+        userId,
+        type,
+        title,
+        body,
+        data: data
+          ? (structuredClone(data) as Prisma.InputJsonValue)
+          : undefined,
+      },
     });
   }
 
@@ -21,7 +35,9 @@ export class InAppNotificationService {
   }
 
   async getUnreadCount(userId: string) {
-    return this.prisma.inAppNotification.count({ where: { userId, read: false } });
+    return this.prisma.inAppNotification.count({
+      where: { userId, read: false },
+    });
   }
 
   async markRead(id: string, userId: string) {

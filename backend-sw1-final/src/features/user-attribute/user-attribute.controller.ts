@@ -1,7 +1,17 @@
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  UseInterceptors, UploadedFile, ParseFilePipe,
-  FileTypeValidator, MaxFileSizeValidator, UseGuards,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserAttributeService } from './user-attribute.service';
@@ -36,7 +46,10 @@ export class UserAttributeController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserAttributeDto: UpdateUserAttributeDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUserAttributeDto: UpdateUserAttributeDto,
+  ) {
     return this.userAttributeService.update(id, updateUserAttributeDto);
   }
 

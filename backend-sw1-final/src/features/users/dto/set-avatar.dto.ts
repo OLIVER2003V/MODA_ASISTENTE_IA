@@ -1,5 +1,5 @@
-import { IsIn, IsString } from 'class-validator'
-import { ApiProperty } from '@nestjs/swagger'
+import { IsIn, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export const AVATAR_STYLES = [
   'adventurer',
@@ -10,9 +10,9 @@ export const AVATAR_STYLES = [
   'notionists',
   'open-peeps',
   'personas',
-] as const
+] as const;
 
-export type AvatarStyle = (typeof AVATAR_STYLES)[number]
+export type AvatarStyle = (typeof AVATAR_STYLES)[number];
 
 export class SetAvatarDto {
   @ApiProperty({
@@ -22,5 +22,5 @@ export class SetAvatarDto {
   })
   @IsString()
   @IsIn(AVATAR_STYLES)
-  style: AvatarStyle
+  style: AvatarStyle;
 }

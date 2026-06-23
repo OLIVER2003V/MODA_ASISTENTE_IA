@@ -1,9 +1,6 @@
-import { applyDecorators, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../guards";
-
+import { applyDecorators, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../guards';
 
 export const Auth = () => {
-  return applyDecorators(
-    UseGuards(JwtAuthGuard),
-  );
+  return applyDecorators(UseGuards(JwtAuthGuard));
 };

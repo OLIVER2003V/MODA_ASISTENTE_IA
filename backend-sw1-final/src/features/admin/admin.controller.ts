@@ -1,6 +1,13 @@
 import {
-  Controller, Post, Get, Patch, Body, Param,
-  UseGuards, Headers, Query,
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Body,
+  Param,
+  UseGuards,
+  Headers,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

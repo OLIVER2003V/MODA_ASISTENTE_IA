@@ -43,7 +43,9 @@ export class NotificationsService {
     const { firebase } = envs;
 
     if (!firebase.credentialsJson && !firebase.keyFilePath) {
-      this.logger.warn('Firebase credentials not configured. Push notifications will not work.');
+      this.logger.warn(
+        'Firebase credentials not configured. Push notifications will not work.',
+      );
       return;
     }
 
@@ -56,23 +58,34 @@ export class NotificationsService {
             ? raw
             : Buffer.from(raw, 'base64').toString('utf-8');
           const serviceAccount = JSON.parse(decoded);
-          admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+          });
         } else {
           // Local: path to JSON file
-          admin.initializeApp({ credential: admin.credential.cert(firebase.keyFilePath!) });
+          admin.initializeApp({
+            credential: admin.credential.cert(firebase.keyFilePath!),
+          });
         }
       }
 
       this.initialized = true;
       this.logger.log('Firebase initialized successfully');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown Firebase initialization error';
-      this.logger.warn(`Firebase init failed. Push notifications disabled. ${message}`);
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unknown Firebase initialization error';
+      this.logger.warn(
+        `Firebase init failed. Push notifications disabled. ${message}`,
+      );
       this.initialized = false;
     }
   }
 
-  async sendNotification(dto: SendNotificationDto): Promise<NotificationResult> {
+  async sendNotification(
+    dto: SendNotificationDto,
+  ): Promise<NotificationResult> {
     if (!this.initialized) {
       throw new Error('Notifications service is not configured');
     }
@@ -97,7 +110,9 @@ export class NotificationsService {
     }
   }
 
-  async sendMulticastNotification(dto: SendMulticastNotificationDto): Promise<MulticastResult> {
+  async sendMulticastNotification(
+    dto: SendMulticastNotificationDto,
+  ): Promise<MulticastResult> {
     if (!this.initialized) {
       throw new Error('Notifications service is not configured');
     }
@@ -121,7 +136,9 @@ export class NotificationsService {
         error: resp.error?.message,
       }));
 
-      this.logger.log(`Multicast sent: ${response.successCount} success, ${response.failureCount} failed`);
+      this.logger.log(
+        `Multicast sent: ${response.successCount} success, ${response.failureCount} failed`,
+      );
 
       return {
         successCount: response.successCount,
@@ -129,7 +146,9 @@ export class NotificationsService {
         results,
       };
     } catch (error) {
-      this.logger.error(`Failed to send multicast notification: ${error.message}`);
+      this.logger.error(
+        `Failed to send multicast notification: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -178,6 +197,8 @@ export class NotificationsService {
     }
 
     await admin.messaging().unsubscribeFromTopic(tokens, topic);
-    this.logger.log(`Unsubscribed ${tokens.length} tokens from topic: ${topic}`);
+    this.logger.log(
+      `Unsubscribed ${tokens.length} tokens from topic: ${topic}`,
+    );
   }
 }

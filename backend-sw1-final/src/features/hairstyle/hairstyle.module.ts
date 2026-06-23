@@ -18,6 +18,6 @@ import { PythonAiModule } from 'src/common/python/python-ai.module';
     PythonAiModule,
   ],
   controllers: [HairstyleController],
-  providers:   [HairstyleService, PremiumGuard],
+  providers: [HairstyleService, PremiumGuard],
 })
 export class HairstyleModule {}

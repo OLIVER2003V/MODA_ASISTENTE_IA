@@ -1,10 +1,18 @@
-import { Controller, Get, Post, Patch, Param, Delete, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Delete,
+  Body,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { OutfitService } from './outfit.service';
 import { UpdateOutfitDto } from './dto/update-outfit.dto';
-import { Auth }    from '../auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User }    from 'generated/prisma/client';
+import { User } from 'generated/prisma/client';
 
 @ApiTags('outfit')
 @Controller('outfit')
@@ -14,7 +22,10 @@ export class OutfitController {
   @Post('manual')
   @Auth()
   @ApiOperation({ summary: 'Create outfit manually with selected garments' })
-  createManual(@Body() dto: { name: string; garmentIds: string[] }, @GetUser() user: User) {
+  createManual(
+    @Body() dto: { name: string; garmentIds: string[] },
+    @GetUser() user: User,
+  ) {
     return this.outfitService.createManual(dto.name, dto.garmentIds, user.id);
   }
 
@@ -33,7 +44,11 @@ export class OutfitController {
   @Patch(':id')
   @Auth()
   @ApiOperation({ summary: 'Update outfit name/description' })
-  update(@Param('id') id: string, @Body() dto: UpdateOutfitDto, @GetUser() user: User) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateOutfitDto,
+    @GetUser() user: User,
+  ) {
     return this.outfitService.update(id, dto, user.id);
   }
 

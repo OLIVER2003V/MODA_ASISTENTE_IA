@@ -11,20 +11,36 @@ import type {
 
 const BEST_TIMES: Record<string, { mejores: string[]; evitar: string }> = {
   linkedin: {
-    mejores: ['Martes a jueves 8–10hs', 'Todos los días 12–13hs', 'Martes a jueves 17–18hs'],
-    evitar:  'Fines de semana y horarios nocturnos',
+    mejores: [
+      'Martes a jueves 8–10hs',
+      'Todos los días 12–13hs',
+      'Martes a jueves 17–18hs',
+    ],
+    evitar: 'Fines de semana y horarios nocturnos',
   },
   instagram: {
-    mejores: ['Lunes a viernes 9–11hs', 'Lunes a viernes 14–15hs', 'Sábados 10–12hs'],
-    evitar:  'Domingos por la mañana y días festivos antes de las 10hs',
+    mejores: [
+      'Lunes a viernes 9–11hs',
+      'Lunes a viernes 14–15hs',
+      'Sábados 10–12hs',
+    ],
+    evitar: 'Domingos por la mañana y días festivos antes de las 10hs',
   },
   tiktok: {
-    mejores: ['Martes a viernes 7–9hs', 'Martes a viernes 19–21hs', 'Domingos 9–11hs'],
-    evitar:  'Lunes temprano y entre 13–18hs (horario de menor engagement)',
+    mejores: [
+      'Martes a viernes 7–9hs',
+      'Martes a viernes 19–21hs',
+      'Domingos 9–11hs',
+    ],
+    evitar: 'Lunes temprano y entre 13–18hs (horario de menor engagement)',
   },
   facebook: {
-    mejores: ['Miércoles a viernes 9–11hs', 'Miércoles a viernes 13hs', 'Jueves 20–21hs'],
-    evitar:  'Domingos y horario nocturno después de las 22hs',
+    mejores: [
+      'Miércoles a viernes 9–11hs',
+      'Miércoles a viernes 13hs',
+      'Jueves 20–21hs',
+    ],
+    evitar: 'Domingos y horario nocturno después de las 22hs',
   },
 };
 
@@ -34,14 +50,20 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 @Injectable()
 export class SocialBrandingService {
   private readonly logger = new Logger(SocialBrandingService.name);
-  private readonly cache = new Map<string, { data: SocialBrandingResponse; expiresAt: number }>();
+  private readonly cache = new Map<
+    string,
+    { data: SocialBrandingResponse; expiresAt: number }
+  >();
 
   constructor(
-    private readonly prisma:    PrismaService,
+    private readonly prisma: PrismaService,
     private readonly aiService: AiService,
   ) {}
 
-  async getRecommendations(userId: string, dto: SocialBrandingDto): Promise<SocialBrandingResponse> {
+  async getRecommendations(
+    userId: string,
+    dto: SocialBrandingDto,
+  ): Promise<SocialBrandingResponse> {
     const { network, refresh } = dto;
     const cacheKey = `${userId}:${network}`;
 
@@ -57,32 +79,39 @@ export class SocialBrandingService {
 
     const { profile, hasProfile } = await this.buildUserProfile(userId);
 
-    this.logger.log(`Generating social branding — userId=${userId} network=${network} hasProfile=${hasProfile}`);
-    const aiResult = await this.aiService.generateSocialBranding(profile, network);
+    this.logger.log(
+      `Generating social branding — userId=${userId} network=${network} hasProfile=${hasProfile}`,
+    );
+    const aiResult = await this.aiService.generateSocialBranding(
+      profile,
+      network,
+    );
 
     const result: SocialBrandingResponse = {
       network,
       hasProfile,
       imagen: {
-        titulo:   this.safeStr(aiResult['imagen']?.['titulo']),
-        paleta:   this.sanitizePalette(aiResult['imagen']?.['paleta']),
+        titulo: this.safeStr(aiResult['imagen']?.['titulo']),
+        paleta: this.sanitizePalette(aiResult['imagen']?.['paleta']),
         keywords: this.safeStrArray(aiResult['imagen']?.['keywords']),
-        tips:     this.safeStrArray(aiResult['imagen']?.['tips']),
+        tips: this.safeStrArray(aiResult['imagen']?.['tips']),
       },
       contenido: {
-        tipos:      this.safeStrArray(aiResult['contenido']?.['tipos']),
+        tipos: this.safeStrArray(aiResult['contenido']?.['tipos']),
         frecuencia: this.safeStr(aiResult['contenido']?.['frecuencia']),
-        ideas:      this.safeStrArray(aiResult['contenido']?.['ideas']),
+        ideas: this.safeStrArray(aiResult['contenido']?.['ideas']),
       },
       horarios: BEST_TIMES[network] ?? { mejores: [], evitar: '' },
       hashtags: this.safeStrArray(aiResult['hashtags']),
       tono: {
-        titulo:      this.safeStr(aiResult['tono']?.['titulo']),
+        titulo: this.safeStr(aiResult['tono']?.['titulo']),
         descripcion: this.safeStr(aiResult['tono']?.['descripcion']),
-        tips:        this.safeStrArray(aiResult['tono']?.['tips']),
+        tips: this.safeStrArray(aiResult['tono']?.['tips']),
       },
-      captionTemplates: this.parseCaptionTemplates(aiResult['captionTemplates']),
-      contentCalendar:  this.parseCalendar(aiResult['contentCalendar']),
+      captionTemplates: this.parseCaptionTemplates(
+        aiResult['captionTemplates'],
+      ),
+      contentCalendar: this.parseCalendar(aiResult['contentCalendar']),
       trendingSearches: this.safeStrArray(aiResult['trendingSearches']),
       profileChecklist: this.safeStrArray(aiResult['profileChecklist']),
     };
@@ -116,15 +145,18 @@ export class SocialBrandingService {
   private safeStrArray(val: unknown): string[] {
     if (!Array.isArray(val)) return [];
     return val
-      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-      .map(s => s.trim());
+      .filter(
+        (item): item is string =>
+          typeof item === 'string' && item.trim().length > 0,
+      )
+      .map((s) => s.trim());
   }
 
   private sanitizePalette(val: unknown): string[] {
     if (!Array.isArray(val)) return [];
     return val
       .filter((c): c is string => typeof c === 'string')
-      .map(c => {
+      .map((c) => {
         const s = c.trim();
         if (HEX_REGEX.test(s)) return s;
         const withHash = `#${s}`;
@@ -141,18 +173,20 @@ export class SocialBrandingService {
     userId: string,
   ): Promise<{ profile: UserStyleProfile; hasProfile: boolean }> {
     try {
-      const attr = await this.prisma.userAttribute.findUnique({ where: { userId } });
+      const attr = await this.prisma.userAttribute.findUnique({
+        where: { userId },
+      });
       if (!attr) return { profile: this.emptyProfile(), hasProfile: false };
 
       const profile: UserStyleProfile = {
-        styles:      attr.preferredStyles ?? [],
-        colors:      attr.favoriteColors  ?? [],
-        avoidColors: attr.avoidColors     ?? [],
-        gender:      attr.gender     ?? null,
-        age:         attr.age        ?? null,
-        profession:  attr.profession ?? null,
-        bodyType:    attr.bodyType   ?? null,
-        skinTone:    attr.skinTone   ?? null,
+        styles: attr.preferredStyles ?? [],
+        colors: attr.favoriteColors ?? [],
+        avoidColors: attr.avoidColors ?? [],
+        gender: attr.gender ?? null,
+        age: attr.age ?? null,
+        profession: attr.profession ?? null,
+        bodyType: attr.bodyType ?? null,
+        skinTone: attr.skinTone ?? null,
       };
 
       const hasProfile =
@@ -168,39 +202,61 @@ export class SocialBrandingService {
 
   private emptyProfile(): UserStyleProfile {
     return {
-      styles: [], colors: [], avoidColors: [],
-      gender: null, age: null, profession: null,
-      bodyType: null, skinTone: null,
+      styles: [],
+      colors: [],
+      avoidColors: [],
+      gender: null,
+      age: null,
+      profession: null,
+      bodyType: null,
+      skinTone: null,
     };
   }
 
   private parseCaptionTemplates(val: unknown): CaptionSet[] {
     if (!Array.isArray(val)) return [];
     return val
-      .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-      .map(item => ({
-        idea:  this.safeStr(item['idea']),
+      .filter(
+        (item): item is Record<string, unknown> =>
+          typeof item === 'object' && item !== null,
+      )
+      .map((item) => ({
+        idea: this.safeStr(item['idea']),
         corta: this.safeStr(item['corta']),
         media: this.safeStr(item['media']),
         larga: this.safeStr(item['larga']),
       }))
-      .filter(c => c.idea.length > 0);
+      .filter((c) => c.idea.length > 0);
   }
 
   private parseCalendar(val: unknown): CalendarDay[] {
-    const validDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    const validDays = [
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+      'Domingo',
+    ];
     const validTypes = ['OUTFIT', 'PHOTO', 'TIP', 'REST'];
 
     if (!Array.isArray(val)) return [];
     return val
-      .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-      .map(item => ({
-        day:  this.safeStr(item['day']),
+      .filter(
+        (item): item is Record<string, unknown> =>
+          typeof item === 'object' && item !== null,
+      )
+      .map((item) => ({
+        day: this.safeStr(item['day']),
         type: this.safeStr(item['type']).toUpperCase(),
         hour: this.safeStr(item['hour']),
         idea: this.safeStr(item['idea']),
       }))
-      .filter(d => validDays.includes(d.day))
-      .map(d => ({ ...d, type: validTypes.includes(d.type) ? d.type : 'REST' }));
+      .filter((d) => validDays.includes(d.day))
+      .map((d) => ({
+        ...d,
+        type: validTypes.includes(d.type) ? d.type : 'REST',
+      }));
   }
 }

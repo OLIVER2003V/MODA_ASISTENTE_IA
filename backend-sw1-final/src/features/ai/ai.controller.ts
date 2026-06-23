@@ -1,7 +1,25 @@
-import { Controller, Post, Get, Body, Param, HttpCode, UseInterceptors, UploadedFile, BadRequestException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  HttpCode,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AiService } from './ai.service';
-import { AskQuestionDto, AnalyzeImageDto, FixMultiplicityDto, ValidateDiagramDto, GenerateOutfitDto } from './dto';
+import {
+  AskQuestionDto,
+  AnalyzeImageDto,
+  FixMultiplicityDto,
+  ValidateDiagramDto,
+  GenerateOutfitDto,
+} from './dto';
 import { Express } from 'express';
 
 @Controller('ai')
@@ -19,50 +37,62 @@ export class AiController {
   }
 
   @Post('analyze-image')
-  @UseInterceptors(FileInterceptor('image', {
-    limits: {
-      fileSize: 20 * 1024 * 1024, // 20MB máximo
-    },
-    fileFilter: (req, file, callback) => {
-      // Verificar que sea una imagen
-      if (!file.mimetype.startsWith('image/')) {
-        return callback(new BadRequestException('Solo se permiten archivos de imagen'), false);
-      }
-      
-      // Tipos de imagen soportados por OpenAI Vision
-      const allowedMimeTypes = [
-        'image/jpeg',
-        'image/jpg', 
-        'image/png',
-        'image/gif',
-        'image/webp'
-      ];
-      
-      if (!allowedMimeTypes.includes(file.mimetype)) {
-        return callback(new BadRequestException('Formato de imagen no soportado. Use: JPEG, PNG, GIF o WebP'), false);
-      }
-      
-      callback(null, true);
-    }
-  }))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 20MB máximo
+      },
+      fileFilter: (req, file, callback) => {
+        // Verificar que sea una imagen
+        if (!file.mimetype.startsWith('image/')) {
+          return callback(
+            new BadRequestException('Solo se permiten archivos de imagen'),
+            false,
+          );
+        }
+
+        // Tipos de imagen soportados por OpenAI Vision
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+        ];
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException(
+              'Formato de imagen no soportado. Use: JPEG, PNG, GIF o WebP',
+            ),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
   async analyzeImage(
     @UploadedFile() file: Express.Multer.File,
-    @Body() analyzeImageDto: AnalyzeImageDto
+    @Body() analyzeImageDto: AnalyzeImageDto,
   ) {
     if (!file) {
       throw new BadRequestException('No se ha proporcionado ninguna imagen');
     }
 
     return this.aiService.analyzeImage(
-      file.buffer, 
-      file.mimetype, 
-      analyzeImageDto.additionalContext
+      file.buffer,
+      file.mimetype,
+      analyzeImageDto.additionalContext,
     );
   }
 
   @Post('validate-diagram')
   async validateDiagram(@Body() validateDiagramDto: ValidateDiagramDto) {
-    return this.aiService.validateAndCorrectDiagram(validateDiagramDto.gojsDiagram);
+    return this.aiService.validateAndCorrectDiagram(
+      validateDiagramDto.gojsDiagram,
+    );
   }
 
   @Post('generate-outfit')
@@ -73,7 +103,8 @@ export class AiController {
   @Post('retrain')
   async retrainModel() {
     const result = await this.aiService.retrainCompatibilityModel();
-    if (!result) throw new ServiceUnavailableException('Python AI service no disponible');
+    if (!result)
+      throw new ServiceUnavailableException('Python AI service no disponible');
     return result;
   }
 
@@ -99,7 +130,11 @@ export class AiController {
   @HttpCode(202)
   queueOutfitGeneration(@Body() dto: GenerateOutfitDto) {
     const task = this.aiService.enqueueOutfitGeneration(dto);
-    return { taskId: task.id, status: task.status, message: 'Outfit generation queued' };
+    return {
+      taskId: task.id,
+      status: task.status,
+      message: 'Outfit generation queued',
+    };
   }
 
   @Get('task/:taskId')
@@ -107,33 +142,48 @@ export class AiController {
     const task = this.aiService.getTask(taskId);
     if (!task) throw new NotFoundException(`Task ${taskId} not found`);
     return {
-      taskId:    task.id,
-      status:    task.status,
+      taskId: task.id,
+      status: task.status,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
-      result:    task.status === 'done'   ? task.result : undefined,
-      error:     task.status === 'error'  ? task.error  : undefined,
+      result: task.status === 'done' ? task.result : undefined,
+      error: task.status === 'error' ? task.error : undefined,
     };
   }
 
   @Post('analyze-selfie')
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 10 * 1024 * 1024 },
-    fileFilter: (_, file, cb) => {
-      const allowedMimes = ['image/jpeg','image/jpg','image/png','image/webp'];
-      const ext = (file.originalname.split('.').pop() ?? '').toLowerCase();
-      const allowedExts = ['jpg','jpeg','png','webp'];
-      if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
-        return cb(null, true);
-      }
-      cb(new BadRequestException('Solo se permiten imágenes JPG, PNG o WebP'), false);
-    },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (_, file, cb) => {
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp',
+        ];
+        const ext = (file.originalname.split('.').pop() ?? '').toLowerCase();
+        const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+        if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
+          return cb(null, true);
+        }
+        cb(
+          new BadRequestException('Solo se permiten imágenes JPG, PNG o WebP'),
+          false,
+        );
+      },
+    }),
+  )
   async analyzeSelfie(
     @UploadedFile() file: Express.Multer.File,
     @Body('isFullBody') isFullBody?: string,
   ) {
-    if (!file) throw new BadRequestException('No se proporcionó ninguna imagen');
-    return this.aiService.analyzeSelfie(file.buffer, file.mimetype, isFullBody === 'true');
+    if (!file)
+      throw new BadRequestException('No se proporcionó ninguna imagen');
+    return this.aiService.analyzeSelfie(
+      file.buffer,
+      file.mimetype,
+      isFullBody === 'true',
+    );
   }
 }

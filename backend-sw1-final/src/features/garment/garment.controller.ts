@@ -30,7 +30,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from 'generated/prisma/client';
-import { Express } from 'express'
+import { Express } from 'express';
 @ApiTags('Garment')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -175,7 +175,9 @@ export class GarmentController {
   }
 
   @Patch(':id/describe')
-  @ApiOperation({ summary: 'Generar descripción con IA para una prenda existente' })
+  @ApiOperation({
+    summary: 'Generar descripción con IA para una prenda existente',
+  })
   describe(@Param('id') id: string) {
     return this.garmentService.regenerateDescription(id);
   }
@@ -187,7 +189,9 @@ export class GarmentController {
   }
 
   @Post(':id/try-on')
-  @ApiOperation({ summary: 'Virtual try-on: probarse una prenda sobre una foto' })
+  @ApiOperation({
+    summary: 'Virtual try-on: probarse una prenda sobre una foto',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -207,7 +211,9 @@ export class GarmentController {
     @Param('id') id: string,
     @UploadedFile(
       new ParseFilePipe({
-        validators: [new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/i })],
+        validators: [
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/i }),
+        ],
       }),
     )
     photo: Express.Multer.File,
@@ -220,5 +226,4 @@ export class GarmentController {
   findByOutfit(@Param('outfitId') outfitId: string) {
     return this.garmentService.findByOutfitId(outfitId);
   }
-
 }

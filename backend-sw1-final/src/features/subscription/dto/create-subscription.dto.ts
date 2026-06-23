@@ -2,7 +2,7 @@ import { IsEnum } from 'class-validator';
 
 export enum SubscriptionPlan {
   MONTHLY = 'monthly',
-  ANNUAL  = 'annual',
+  ANNUAL = 'annual',
 }
 
 export class CreateSubscriptionDto {

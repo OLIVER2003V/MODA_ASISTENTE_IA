@@ -1,9 +1,16 @@
-import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export enum PostTypeDto {
   OUTFIT = 'OUTFIT',
-  PHOTO  = 'PHOTO',
-  TIP    = 'TIP',
+  PHOTO = 'PHOTO',
+  TIP = 'TIP',
 }
 
 export class CreatePostDto {

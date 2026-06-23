@@ -1,7 +1,17 @@
 import {
-  Body, Controller, Delete, Get, Param, Patch, Post, Query,
-  UploadedFile, UseInterceptors,
-  ParseFilePipe, FileTypeValidator, MaxFileSizeValidator,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
@@ -9,9 +19,9 @@ import { UsersService } from './users.service';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto';
 import { SetAvatarDto } from './dto/set-avatar.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { Auth }    from '../auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User }    from 'generated/prisma/client';
+import { User } from 'generated/prisma/client';
 
 @ApiTags('Users')
 @Controller('users')
@@ -47,7 +57,11 @@ export class UsersController {
       type: 'object',
       required: ['file'],
       properties: {
-        file: { type: 'string', format: 'binary', description: 'Foto de perfil (jpg/png/webp, max 5 MB)' },
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Foto de perfil (jpg/png/webp, max 5 MB)',
+        },
       },
     },
   })
@@ -100,7 +114,10 @@ export class UsersController {
   // ── Perfil público ─────────────────────────────────────────────────────────
 
   @Get(':id/public-profile')
-  getPublicProfile(@Param('id') id: string, @Query('viewerId') viewerId?: string) {
+  getPublicProfile(
+    @Param('id') id: string,
+    @Query('viewerId') viewerId?: string,
+  ) {
     return this.usersService.getPublicProfile(id, viewerId);
   }
 

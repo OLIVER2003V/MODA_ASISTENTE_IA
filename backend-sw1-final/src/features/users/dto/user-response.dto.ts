@@ -7,7 +7,7 @@ export class UserResponseDto {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  
+
   @Exclude()
   password: string;
 

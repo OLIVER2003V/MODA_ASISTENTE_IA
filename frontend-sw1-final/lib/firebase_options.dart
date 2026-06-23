@@ -50,11 +50,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCOrMjluc3neUj9iEdCcK6-IvUjE2TB-6Y',
-    appId: '1:575537780527:android:af0eccfc757b1e4739f3da',
-    messagingSenderId: '575537780527',
-    projectId: 'proyecto-final-1a2f0',
-    storageBucket: 'proyecto-final-1a2f0.firebasestorage.app',
+    apiKey: 'AIzaSyAV8wg4jN9OczmYESqQ6GaAfkQ1Q1pwtpU',
+    appId: '1:556467142214:android:41ca592164abc920a11447',
+    messagingSenderId: '556467142214',
+    projectId: 'proyecto-grupal-moda',
+    storageBucket: 'proyecto-grupal-moda.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

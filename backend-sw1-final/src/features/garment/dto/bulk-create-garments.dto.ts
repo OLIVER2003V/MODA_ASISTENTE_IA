@@ -12,7 +12,8 @@ export class BulkCreateGarmentsDto {
   closetDescription?: string;
 
   @ApiProperty({
-    description: 'Lista de rutas locales de las imágenes (en el mismo orden que los archivos)',
+    description:
+      'Lista de rutas locales de las imágenes (en el mismo orden que los archivos)',
     type: [String],
   })
   @IsArray()

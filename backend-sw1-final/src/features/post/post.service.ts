@@ -5,15 +5,18 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService }       from 'src/common/prisma/prisma.service';
-import { StorageService }      from 'src/common/storage/storage.service';
+import { PrismaService } from 'src/common/prisma/prisma.service';
+import { StorageService } from 'src/common/storage/storage.service';
 import { NotificationsService } from 'src/common/notifications/notifications.service';
 import { InAppNotificationService } from 'src/common/in-app-notification/in-app-notification.service';
-import { CreatePostDto, CreateCommentDto, PostTypeDto } from './dto/create-post.dto';
+import { CreatePostDto, CreateCommentDto } from './dto/create-post.dto';
 import { PostType, ReactionType } from 'generated/prisma/client';
 
 const AUTHOR_SELECT = {
-  id: true, name: true, profilePhoto: true, avatarStyle: true,
+  id: true,
+  name: true,
+  profilePhoto: true,
+  avatarStyle: true,
 } as const;
 
 const POST_INCLUDE = {
@@ -31,7 +34,7 @@ const POST_INCLUDE = {
 function extractHashtags(caption?: string | null): string[] {
   if (!caption) return [];
   const matches = caption.match(/#[\wáéíóúüñÁÉÍÓÚÜÑ]+/gi) ?? [];
-  return [...new Set(matches.map(t => t.toLowerCase()))];
+  return [...new Set(matches.map((t) => t.toLowerCase()))];
 }
 
 @Injectable()
@@ -39,18 +42,22 @@ export class PostService {
   private readonly logger = new Logger(PostService.name);
 
   constructor(
-    private readonly prisma:         PrismaService,
-    private readonly storage:        StorageService,
-    private readonly notifications:  NotificationsService,
-    private readonly inAppNotif:     InAppNotificationService,
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+    private readonly notifications: NotificationsService,
+    private readonly inAppNotif: InAppNotificationService,
   ) {}
 
   // ─── Upload imagen para post tipo PHOTO ────────────────────────────────────
 
-  async uploadPostImage(file: Express.Multer.File): Promise<{ imageUrl: string }> {
+  async uploadPostImage(
+    file: Express.Multer.File,
+  ): Promise<{ imageUrl: string }> {
     const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.mimetype))
-      throw new BadRequestException('Solo se permiten imágenes JPG, PNG o WebP');
+      throw new BadRequestException(
+        'Solo se permiten imágenes JPG, PNG o WebP',
+      );
     if (file.size > 10 * 1024 * 1024)
       throw new BadRequestException('La imagen no puede superar 10 MB');
 
@@ -64,8 +71,13 @@ export class PostService {
     const type = (dto.postType as PostType) ?? PostType.OUTFIT;
 
     if (type === PostType.OUTFIT) {
-      if (!dto.outfitId) throw new BadRequestException('outfitId es requerido para posts de outfit');
-      if (!await this.prisma.outfit.findUnique({ where: { id: dto.outfitId } }))
+      if (!dto.outfitId)
+        throw new BadRequestException(
+          'outfitId es requerido para posts de outfit',
+        );
+      if (
+        !(await this.prisma.outfit.findUnique({ where: { id: dto.outfitId } }))
+      )
         throw new NotFoundException('Outfit no encontrado');
     }
 
@@ -76,15 +88,15 @@ export class PostService {
       throw new BadRequestException('caption es requerido para tips');
 
     const autoTags = extractHashtags(dto.caption);
-    const allTags  = [...new Set([...(dto.tags ?? []), ...autoTags])];
+    const allTags = [...new Set([...(dto.tags ?? []), ...autoTags])];
 
     return this.prisma.post.create({
       data: {
-        postType:  type,
-        outfitId:  dto.outfitId ?? undefined,
-        imageUrl:  dto.imageUrl ?? undefined,
-        caption:   dto.caption  ?? undefined,
-        tags:      allTags,
+        postType: type,
+        outfitId: dto.outfitId ?? undefined,
+        imageUrl: dto.imageUrl ?? undefined,
+        caption: dto.caption ?? undefined,
+        tags: allTags,
         userId,
       },
       include: POST_INCLUDE,
@@ -96,7 +108,8 @@ export class PostService {
     const [posts, total] = await Promise.all([
       this.prisma.post.findMany({
         orderBy: { createdAt: 'desc' },
-        skip, take: limit,
+        skip,
+        take: limit,
         include: POST_INCLUDE,
       }),
       this.prisma.post.count(),
@@ -111,7 +124,7 @@ export class PostService {
       where: { followerId: userId },
       select: { followingId: true },
     });
-    const followingIds = following.map(f => f.followingId);
+    const followingIds = following.map((f) => f.followingId);
 
     if (followingIds.length === 0)
       return { posts: [], total: 0, page, limit, hasMore: false };
@@ -120,7 +133,8 @@ export class PostService {
       this.prisma.post.findMany({
         where: { userId: { in: followingIds } },
         orderBy: { createdAt: 'desc' },
-        skip, take: limit,
+        skip,
+        take: limit,
         include: POST_INCLUDE,
       }),
       this.prisma.post.count({ where: { userId: { in: followingIds } } }),
@@ -137,19 +151,25 @@ export class PostService {
   }
 
   async findOne(id: string) {
-    const post = await this.prisma.post.findUnique({ where: { id }, include: POST_INCLUDE });
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+      include: POST_INCLUDE,
+    });
     if (!post) throw new NotFoundException('Post no encontrado');
     return post;
   }
 
   async findByTag(tag: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    const normalizedTag = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
+    const normalizedTag = tag.startsWith('#')
+      ? tag.toLowerCase()
+      : `#${tag.toLowerCase()}`;
     const [posts, total] = await Promise.all([
       this.prisma.post.findMany({
         where: { tags: { has: normalizedTag } },
         orderBy: { createdAt: 'desc' },
-        skip, take: limit,
+        skip,
+        take: limit,
         include: POST_INCLUDE,
       }),
       this.prisma.post.count({ where: { tags: { has: normalizedTag } } }),
@@ -165,7 +185,11 @@ export class PostService {
 
     // Borrar imagen de Cloudinary si es post tipo PHOTO
     if (post.imageUrl && post.postType === PostType.PHOTO) {
-      const publicId = post.imageUrl.split('/').slice(-2).join('/').split('.')[0];
+      const publicId = post.imageUrl
+        .split('/')
+        .slice(-2)
+        .join('/')
+        .split('.')[0];
       await this.storage.deleteFile(publicId).catch(() => null);
     }
 
@@ -179,8 +203,15 @@ export class PostService {
 
   // ─── Reacciones ────────────────────────────────────────────────────────────
 
-  async react(postId: string, userId: string, reactionType: ReactionType = ReactionType.LIKE) {
-    const post = await this.prisma.post.findUnique({ where: { id: postId }, include: { user: true } });
+  async react(
+    postId: string,
+    userId: string,
+    reactionType: ReactionType = ReactionType.LIKE,
+  ) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { user: true },
+    });
     if (!post) throw new NotFoundException('Post no encontrado');
 
     const existing = await this.prisma.postInteraction.findUnique({
@@ -196,35 +227,48 @@ export class PostService {
       });
     }
 
-    const reactingUser = await this.prisma.user.findUnique({ where: { id: userId } });
+    const reactingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
     const [interaction] = await this.prisma.$transaction([
       this.prisma.postInteraction.create({
         data: { postId, userId, reactionType },
         include: { user: { select: AUTHOR_SELECT } },
       }),
-      this.prisma.post.update({ where: { id: postId }, data: { reactionCount: { increment: 1 } } }),
+      this.prisma.post.update({
+        where: { id: postId },
+        data: { reactionCount: { increment: 1 } },
+      }),
     ]);
 
     if (post.userId && post.userId !== userId) {
       const REACTION_LABELS: Record<ReactionType, string> = {
-        LIKE: 'le gustó', LOVE: 'amó', FIRE: 'le pareció 🔥', WOW: 'quedó 😮 con',
+        LIKE: 'le gustó',
+        LOVE: 'amó',
+        FIRE: 'le pareció 🔥',
+        WOW: 'quedó 😮 con',
       };
       const label = REACTION_LABELS[reactionType] ?? 'reaccionó a';
-      this.inAppNotif.create(
-        post.userId, 'reaction',
-        'Nueva reacción',
-        `${reactingUser?.name ?? 'Alguien'} ${label} tu publicación`,
-        { postId, reactionType },
-      ).catch(() => null);
+      this.inAppNotif
+        .create(
+          post.userId,
+          'reaction',
+          'Nueva reacción',
+          `${reactingUser?.name ?? 'Alguien'} ${label} tu publicación`,
+          { postId, reactionType },
+        )
+        .catch(() => null);
 
       if (post.user?.fcmToken) {
-        this.notifications.sendNotification({
-          token: post.user.fcmToken,
-          title: 'Nueva reacción',
-          body: `${reactingUser?.name ?? 'Alguien'} ${label} tu publicación`,
-          data: { postId, type: 'reaction' },
-        }).catch(e => this.logger.warn(`FCM: ${(e as Error).message}`));
+        this.notifications
+          .sendNotification({
+            token: post.user.fcmToken,
+            title: 'Nueva reacción',
+            body: `${reactingUser?.name ?? 'Alguien'} ${label} tu publicación`,
+            data: { postId, type: 'reaction' },
+          })
+          .catch((e) => this.logger.warn(`FCM: ${(e as Error).message}`));
       }
     }
     return interaction;
@@ -238,13 +282,16 @@ export class PostService {
 
     await this.prisma.$transaction([
       this.prisma.postInteraction.delete({ where: { id: existing.id } }),
-      this.prisma.post.update({ where: { id: postId }, data: { reactionCount: { decrement: 1 } } }),
+      this.prisma.post.update({
+        where: { id: postId },
+        data: { reactionCount: { decrement: 1 } },
+      }),
     ]);
     return { message: 'Reacción eliminada' };
   }
 
   async getReactions(postId: string) {
-    if (!await this.prisma.post.findUnique({ where: { id: postId } }))
+    if (!(await this.prisma.post.findUnique({ where: { id: postId } })))
       throw new NotFoundException('Post no encontrado');
     return this.prisma.postInteraction.findMany({
       where: { postId },
@@ -267,7 +314,10 @@ export class PostService {
       where: { postId },
       _count: { reactionType: true },
     });
-    return reactions.map(r => ({ type: r.reactionType, count: r._count.reactionType }));
+    return reactions.map((r) => ({
+      type: r.reactionType,
+      count: r._count.reactionType,
+    }));
   }
 
   // ─── Comentarios ───────────────────────────────────────────────────────────
@@ -281,24 +331,33 @@ export class PostService {
         data: { postId, userId, content: dto.content },
         include: { user: { select: AUTHOR_SELECT } },
       }),
-      this.prisma.post.update({ where: { id: postId }, data: { commentCount: { increment: 1 } } }),
+      this.prisma.post.update({
+        where: { id: postId },
+        data: { commentCount: { increment: 1 } },
+      }),
     ]);
 
     if (post.userId && post.userId !== userId) {
-      const commenter = await this.prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
-      this.inAppNotif.create(
-        post.userId, 'comment',
-        'Nuevo comentario',
-        `${commenter?.name ?? 'Alguien'} comentó tu publicación`,
-        { postId, commentId: comment.id },
-      ).catch(() => null);
+      const commenter = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+      this.inAppNotif
+        .create(
+          post.userId,
+          'comment',
+          'Nuevo comentario',
+          `${commenter?.name ?? 'Alguien'} comentó tu publicación`,
+          { postId, commentId: comment.id },
+        )
+        .catch(() => null);
     }
 
     return comment;
   }
 
   async getComments(postId: string) {
-    if (!await this.prisma.post.findUnique({ where: { id: postId } }))
+    if (!(await this.prisma.post.findUnique({ where: { id: postId } })))
       throw new NotFoundException('Post no encontrado');
     return this.prisma.comment.findMany({
       where: { postId },
@@ -308,13 +367,19 @@ export class PostService {
   }
 
   async deleteComment(commentId: string, userId: string) {
-    const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
     if (!comment) throw new NotFoundException('Comentario no encontrado');
-    if (comment.userId !== userId) throw new ForbiddenException('No podés eliminar este comentario');
+    if (comment.userId !== userId)
+      throw new ForbiddenException('No podés eliminar este comentario');
 
     await this.prisma.$transaction([
       this.prisma.comment.delete({ where: { id: commentId } }),
-      this.prisma.post.update({ where: { id: comment.postId }, data: { commentCount: { decrement: 1 } } }),
+      this.prisma.post.update({
+        where: { id: comment.postId },
+        data: { commentCount: { decrement: 1 } },
+      }),
     ]);
     return { message: 'Comentario eliminado' };
   }

@@ -12,9 +12,9 @@ import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
-import { Auth }    from '../auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User }    from 'generated/prisma/client';
+import { User } from 'generated/prisma/client';
 
 @Controller('subscription')
 export class SubscriptionController {
@@ -31,7 +31,9 @@ export class SubscriptionController {
     try {
       return await this.subscriptionService.createCheckout(user.id, dto.planId);
     } catch (err) {
-      this.logger.error(`Checkout failed for userId=${user.id}: ${(err as Error).message}`);
+      this.logger.error(
+        `Checkout failed for userId=${user.id}: ${(err as Error).message}`,
+      );
       throw err;
     }
   }
@@ -44,9 +46,14 @@ export class SubscriptionController {
   ) {
     const rawBody = req.rawBody;
     if (!rawBody) {
-      this.logger.error('rawBody is empty — ensure rawBody:true in NestFactory.create');
+      this.logger.error(
+        'rawBody is empty — ensure rawBody:true in NestFactory.create',
+      );
     }
-    return this.subscriptionService.handleWebhook(rawBody ?? Buffer.alloc(0), sig);
+    return this.subscriptionService.handleWebhook(
+      rawBody ?? Buffer.alloc(0),
+      sig,
+    );
   }
 
   @Get('status')

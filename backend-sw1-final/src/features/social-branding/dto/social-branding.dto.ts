@@ -1,10 +1,10 @@
 import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
 
 export enum SocialNetwork {
-  LINKEDIN  = 'linkedin',
+  LINKEDIN = 'linkedin',
   INSTAGRAM = 'instagram',
-  TIKTOK    = 'tiktok',
-  FACEBOOK  = 'facebook',
+  TIKTOK = 'tiktok',
+  FACEBOOK = 'facebook',
 }
 
 export class SocialBrandingDto {

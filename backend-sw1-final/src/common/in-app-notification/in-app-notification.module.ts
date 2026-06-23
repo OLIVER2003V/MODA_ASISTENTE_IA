@@ -4,8 +4,8 @@ import { InAppNotificationService } from './in-app-notification.service';
 
 @Global()
 @Module({
-  imports:   [PrismaModule],
+  imports: [PrismaModule],
   providers: [InAppNotificationService],
-  exports:   [InAppNotificationService],
+  exports: [InAppNotificationService],
 })
 export class InAppNotificationModule {}

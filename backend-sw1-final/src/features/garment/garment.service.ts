@@ -1,4 +1,9 @@
-import { HttpException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateGarmentDto } from './dto/create-garment.dto';
 import { UpdateGarmentDto } from './dto/update-garment.dto';
 import { BulkCreateGarmentsDto } from './dto/bulk-create-garments.dto';
@@ -35,7 +40,8 @@ export class GarmentService {
     });
 
     // Procesar prendas secuencialmente para no saturar la API de IA (límite gratuito)
-    const garments: Awaited<ReturnType<typeof this.prisma.garment.create>>[] = [];
+    const garments: Awaited<ReturnType<typeof this.prisma.garment.create>>[] =
+      [];
 
     for (let index = 0; index < files.length; index++) {
       const file = files[index];
@@ -47,14 +53,20 @@ export class GarmentService {
       let category: Category | null = null;
 
       try {
-        const aiResult = await this.aiService.describeGarment(file.buffer, file.mimetype);
+        const aiResult = await this.aiService.describeGarment(
+          file.buffer,
+          file.mimetype,
+        );
         aiName = aiResult.name;
         description = aiResult.description;
         if (aiResult.category in Category) {
           category = aiResult.category as Category;
         }
       } catch (error) {
-        console.error(`Error al describir prenda ${index}:`, (error as Error).message);
+        console.error(
+          `Error al describir prenda ${index}:`,
+          (error as Error).message,
+        );
       }
 
       const garment = await this.prisma.garment.create({
@@ -102,14 +114,20 @@ export class GarmentService {
 
     if (file) {
       try {
-        const aiResult = await this.aiService.describeGarment(file.buffer, file.mimetype);
+        const aiResult = await this.aiService.describeGarment(
+          file.buffer,
+          file.mimetype,
+        );
         aiName = aiResult.name;
         description = aiResult.description;
         if (aiResult.category in Category) {
           category = aiResult.category as Category;
         }
       } catch (error) {
-        console.error('Error al describir prenda con IA:', (error as Error).message);
+        console.error(
+          'Error al describir prenda con IA:',
+          (error as Error).message,
+        );
       }
     }
 
@@ -165,14 +183,21 @@ export class GarmentService {
     return garment;
   }
 
-  async update(id: string, dto: UpdateGarmentDto, userId: string, file?: Express.Multer.File) {
+  async update(
+    id: string,
+    dto: UpdateGarmentDto,
+    userId: string,
+    file?: Express.Multer.File,
+  ) {
     const garment = await this.prisma.garment.findUnique({
       where: { id },
       include: { closet: { select: { userId: true } } },
     });
 
-    if (!garment) throw new NotFoundException(`Prenda con ID ${id} no encontrada`);
-    if (garment.closet.userId !== userId) throw new ForbiddenException('No podés modificar esta prenda');
+    if (!garment)
+      throw new NotFoundException(`Prenda con ID ${id} no encontrada`);
+    if (garment.closet.userId !== userId)
+      throw new ForbiddenException('No podés modificar esta prenda');
 
     let path = garment.path;
     if (file) {
@@ -204,23 +229,30 @@ export class GarmentService {
 
   async regenerateDescription(id: string) {
     const garment = await this.prisma.garment.findUnique({ where: { id } });
-    if (!garment) throw new NotFoundException(`Garment with ID ${id} not found`);
-    if (!garment.path) throw new NotFoundException('La prenda no tiene imagen asociada');
+    if (!garment)
+      throw new NotFoundException(`Garment with ID ${id} not found`);
+    if (!garment.path)
+      throw new NotFoundException('La prenda no tiene imagen asociada');
 
     // Descargar la imagen desde la URL para pasársela a la IA
     const https = await import('https');
     const http = await import('http');
     const imageBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const client = garment.path!.startsWith('https') ? https : http;
-      client.get(garment.path!, (res) => {
-        const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('end', () => resolve(Buffer.concat(chunks)));
-        res.on('error', reject);
-      }).on('error', reject);
+      const client = garment.path.startsWith('https') ? https : http;
+      client
+        .get(garment.path, (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        })
+        .on('error', reject);
     });
 
-    const aiResult = await this.aiService.describeGarment(imageBuffer, 'image/jpeg');
+    const aiResult = await this.aiService.describeGarment(
+      imageBuffer,
+      'image/jpeg',
+    );
 
     let category: Category | null = null;
     if (aiResult.category in Category) category = aiResult.category as Category;
@@ -241,8 +273,10 @@ export class GarmentService {
       include: { closet: { select: { userId: true } } },
     });
 
-    if (!garment) throw new NotFoundException(`Prenda con ID ${id} no encontrada`);
-    if (garment.closet.userId !== userId) throw new ForbiddenException('No podés eliminar esta prenda');
+    if (!garment)
+      throw new NotFoundException(`Prenda con ID ${id} no encontrada`);
+    if (garment.closet.userId !== userId)
+      throw new ForbiddenException('No podés eliminar esta prenda');
 
     // Eliminar imagen de GCS si existe
     if (garment.path) {
@@ -259,10 +293,16 @@ export class GarmentService {
     });
   }
 
-  async tryOnGarment(garmentId: string, personFile: Express.Multer.File): Promise<{ tryOnUrl: string }> {
-    const garment = await this.prisma.garment.findUnique({ where: { id: garmentId } });
+  async tryOnGarment(
+    garmentId: string,
+    personFile: Express.Multer.File,
+  ): Promise<{ tryOnUrl: string }> {
+    const garment = await this.prisma.garment.findUnique({
+      where: { id: garmentId },
+    });
     if (!garment) throw new NotFoundException('Prenda no encontrada');
-    if (!garment.path) throw new NotFoundException('La prenda no tiene imagen asociada');
+    if (!garment.path)
+      throw new NotFoundException('La prenda no tiene imagen asociada');
 
     const personImageDataUri = `data:${personFile.mimetype};base64,${personFile.buffer.toString('base64')}`;
 
@@ -277,25 +317,25 @@ export class GarmentService {
   }
 
   async findByOutfitId(outfitId: string) {
-  const outfit = await this.prisma.outfit.findUnique({
-    where: { id: outfitId },
-    include: {
-      garmentOutfits: {
-        include: {
-          garment: true,
-        },
-        orderBy: {
-          order: 'asc', // Opcional: ordena por posición en el outfit
+    const outfit = await this.prisma.outfit.findUnique({
+      where: { id: outfitId },
+      include: {
+        garmentOutfits: {
+          include: {
+            garment: true,
+          },
+          orderBy: {
+            order: 'asc', // Opcional: ordena por posición en el outfit
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!outfit) {
-    throw new HttpException('Outfit not found', 404);
+    if (!outfit) {
+      throw new HttpException('Outfit not found', 404);
+    }
+
+    // Retorna solo los garments
+    return outfit.garmentOutfits.map((go) => go.garment);
   }
-
-  // Retorna solo los garments
-  return outfit.garmentOutfits.map((go) => go.garment);
-}
 }

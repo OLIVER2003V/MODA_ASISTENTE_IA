@@ -1,7 +1,7 @@
 import { Controller, Get, Patch, Param } from '@nestjs/common';
-import { Auth }    from '../auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User }    from 'generated/prisma/client';
+import { User } from 'generated/prisma/client';
 import { InAppNotificationService } from 'src/common/in-app-notification/in-app-notification.service';
 
 @Controller('notifications')
@@ -16,7 +16,7 @@ export class NotificationController {
 
   @Get('unread-count')
   getUnreadCount(@GetUser() user: User) {
-    return this.svc.getUnreadCount(user.id).then(count => ({ count }));
+    return this.svc.getUnreadCount(user.id).then((count) => ({ count }));
   }
 
   @Patch('read-all')

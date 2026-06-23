@@ -1,9 +1,16 @@
-import { Controller, Post, Body, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { SocialBrandingService } from './social-branding.service';
 import { SocialBrandingDto } from './dto';
-import { Auth }    from '../auth/decorators/auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User }    from 'generated/prisma/client';
+import { User } from 'generated/prisma/client';
 
 @Controller('social-branding')
 export class SocialBrandingController {
@@ -25,7 +32,9 @@ export class SocialBrandingController {
     try {
       return await this.socialBrandingService.getRecommendations(user.id, dto);
     } catch (err) {
-      this.logger.error(`Social branding failed for userId=${user.id}: ${(err as Error).message}`);
+      this.logger.error(
+        `Social branding failed for userId=${user.id}: ${(err as Error).message}`,
+      );
       throw new HttpException(
         'No se pudieron generar las recomendaciones. Intentá de nuevo en un momento.',
         HttpStatus.SERVICE_UNAVAILABLE,
