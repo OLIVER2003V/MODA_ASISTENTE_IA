@@ -24,6 +24,9 @@ Thumbs.db
 # Firebase credentials (NEVER commit)
 *adminsdk*.json
 firebase-credentials.json
+frontend-sw1-final/android/app/google-services.json
+frontend-sw1-final/ios/Runner/GoogleService-Info.plist
+frontend-sw1-final/lib/firebase_options.dart
 
 # ML model binaries (regenerated during Docker build)
 python-service/models/*.joblib
