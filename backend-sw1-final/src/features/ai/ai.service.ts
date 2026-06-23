@@ -948,7 +948,7 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
     if (!responseText && this.cerebras) {
       try {
         const completion = await this.cerebras.chat.completions.create({
-          model: 'llama-3.3-70b',
+          model: 'llama3.3-70b',
           messages: [
             { role: 'system', content: outfitSystemPrompt },
             { role: 'user', content: outfitUserPrompt },
@@ -978,6 +978,27 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
         if (responseText) console.log('[generateOutfit] Gemini2 OK');
       } catch (err) {
         console.warn('[generateOutfit] Gemini2 falló:', (err as Error).message.slice(0, 120));
+      }
+    }
+
+    // 5. OpenRouter — fallback final
+    if (!responseText) {
+      try {
+        const orCompletion = await this.openrouter.chat.completions.create({
+          model: 'meta-llama/llama-3.3-70b-instruct:free',
+          messages: [
+            { role: 'system', content: outfitSystemPrompt },
+            { role: 'user', content: outfitUserPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+          stream: false,
+        });
+        responseText =
+          (orCompletion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim() ?? null;
+        if (responseText) console.log('[generateOutfit] OpenRouter OK');
+      } catch (err) {
+        console.warn('[generateOutfit] OpenRouter falló:', (err as Error).message.slice(0, 120));
       }
     }
 
