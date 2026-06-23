@@ -72,6 +72,8 @@ function loadFashionRules(): FashionRules {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly gemini: GoogleGenerativeAI;
+  private readonly gemini2: GoogleGenerativeAI | null;
+  private readonly cerebras: OpenAI | null;
   private readonly openrouter: OpenAI;
   private readonly groq: OpenAI;
 
@@ -86,6 +88,15 @@ export class AiService {
     private readonly pythonAiService: PythonAiService,
   ) {
     this.gemini = new GoogleGenerativeAI(envs.geminiApiKey);
+    this.gemini2 = envs.geminiApiKey2
+      ? new GoogleGenerativeAI(envs.geminiApiKey2)
+      : null;
+    this.cerebras = envs.cerebrasApiKey
+      ? new OpenAI({
+          apiKey: envs.cerebrasApiKey,
+          baseURL: 'https://api.cerebras.ai/v1',
+        })
+      : null;
     this.openrouter = new OpenAI({
       apiKey: envs.openrouterApiKey,
       baseURL: 'https://openrouter.ai/api/v1',
@@ -933,6 +944,43 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
       }
     }
 
+    // 3. Cerebras — Llama 3.3 70B (alta velocidad, 1M tokens/día)
+    if (!responseText && this.cerebras) {
+      try {
+        const completion = await this.cerebras.chat.completions.create({
+          model: 'llama-3.3-70b',
+          messages: [
+            { role: 'system', content: outfitSystemPrompt },
+            { role: 'user', content: outfitUserPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+          stream: false,
+        });
+        responseText =
+          (completion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim() ?? null;
+        if (responseText) console.log('[generateOutfit] Cerebras OK');
+      } catch (err) {
+        console.warn('[generateOutfit] Cerebras falló:', (err as Error).message.slice(0, 120));
+      }
+    }
+
+    // 4. Gemini segunda clave
+    if (!responseText && this.gemini2) {
+      try {
+        const model2 = this.gemini2.getGenerativeModel({
+          model: 'gemini-2.5-flash',
+          systemInstruction: outfitSystemPrompt,
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2000, responseMimeType: 'application/json' },
+        });
+        const result2 = await model2.generateContent(outfitUserPrompt);
+        responseText = result2.response.text() ?? null;
+        if (responseText) console.log('[generateOutfit] Gemini2 OK');
+      } catch (err) {
+        console.warn('[generateOutfit] Gemini2 falló:', (err as Error).message.slice(0, 120));
+      }
+    }
+
     if (!responseText)
       throw new BadRequestException(
         'No se pudo generar el outfit. Los servicios de IA están ocupados, intenta de nuevo.',
@@ -1772,7 +1820,49 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
       );
     }
 
-    // 3. OpenRouter — fallback final
+    // 3. Cerebras — Llama 3.3 70B (1M tokens/día, ultrarrápido)
+    if (this.cerebras) {
+      try {
+        const completion = await this.cerebras.chat.completions.create({
+          model: 'llama-3.3-70b',
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: fullPrompt },
+          ],
+          temperature: 0.85,
+          max_tokens: 400,
+          stream: false,
+        });
+        const raw = (completion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim();
+        if (raw) {
+          console.log('[fashionChat] Cerebras OK');
+          return parseResponse(raw);
+        }
+      } catch (err) {
+        console.warn('[fashionChat] Cerebras falló:', (err as Error).message.slice(0, 120));
+      }
+    }
+
+    // 4. Gemini segunda clave
+    if (this.gemini2) {
+      try {
+        const model2 = this.gemini2.getGenerativeModel({
+          model: 'gemini-2.5-flash',
+          systemInstruction,
+          generationConfig: { temperature: 0.85, maxOutputTokens: 400 },
+        });
+        const result2 = await model2.generateContent(fullPrompt);
+        const raw = result2.response.text();
+        if (raw) {
+          console.log('[fashionChat] Gemini2 OK');
+          return parseResponse(raw);
+        }
+      } catch (err) {
+        console.warn('[fashionChat] Gemini2 falló:', (err as Error).message.slice(0, 120));
+      }
+    }
+
+    // 5. OpenRouter — fallback final
     try {
       const orMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemInstruction },

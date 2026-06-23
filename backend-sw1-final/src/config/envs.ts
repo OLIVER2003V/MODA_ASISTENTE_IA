@@ -15,6 +15,8 @@ interface EnvVars {
   FIREBASE_CREDENTIALS_JSON?: string;
   OPENAI_API_KEY?: string;
   GEMINI_API_KEY: string;
+  GEMINI_API_KEY_2?: string;
+  CEREBRAS_API_KEY?: string;
   OPENROUTER_API_KEY: string;
   GROQ_API_KEY: string;
   HF_TOKEN: string;
@@ -46,6 +48,8 @@ const envVarsSchema = joi
     FIREBASE_CREDENTIALS_JSON: joi.string().optional(),
     OPENAI_API_KEY: joi.string().optional(),
     GEMINI_API_KEY: joi.string().required(),
+    GEMINI_API_KEY_2: joi.string().optional(),
+    CEREBRAS_API_KEY: joi.string().optional(),
     OPENROUTER_API_KEY: joi.string().required(),
     GROQ_API_KEY: joi.string().required(),
     HF_TOKEN: joi.string().required(),
@@ -89,16 +93,18 @@ export const envs = {
   },
   openaiApiKey: envVars.OPENAI_API_KEY,
   geminiApiKey: envVars.GEMINI_API_KEY,
+  geminiApiKey2: envVars.GEMINI_API_KEY_2,
+  cerebrasApiKey: envVars.CEREBRAS_API_KEY,
   openrouterApiKey: envVars.OPENROUTER_API_KEY,
   groqApiKey: envVars.GROQ_API_KEY,
   hfToken: envVars.HF_TOKEN,
   cfAccountId: envVars.CF_ACCOUNT_ID,
   cfApiToken: envVars.CF_API_TOKEN,
   stripe: {
-    secretKey:      envVars.STRIPE_SECRET_KEY,
-    webhookSecret:  envVars.STRIPE_WEBHOOK_SECRET,
+    secretKey: envVars.STRIPE_SECRET_KEY,
+    webhookSecret: envVars.STRIPE_WEBHOOK_SECRET,
     monthlyPriceId: envVars.STRIPE_MONTHLY_PRICE_ID,
-    annualPriceId:  envVars.STRIPE_ANNUAL_PRICE_ID,
+    annualPriceId: envVars.STRIPE_ANNUAL_PRICE_ID,
   },
   replicateApiKey: envVars.REPLICATE_API_KEY,
   bflApiKey: envVars.BFL_API_KEY,
