@@ -897,18 +897,18 @@ ${formalityRules}
 
 ${fashionContext}
 
-PRENDAS DISPONIBLES:
+PRENDAS DISPONIBLES (usa el número entre [] para referenciar cada prenda):
 ${garmentsList}
 
 REGLAS DE COMPOSICIÓN:
 - Máximo 1 TOP, 1 OUTERWEAR, 1 BOTTOM, 1 DRESS (si hay DRESS no incluyas TOP ni BOTTOM), 1 FOOTWEAR, varios ACCESSORY
-- CRÍTICO: Copia el ID exactamente como aparece en "ID: ..." — no lo modifiques, no lo acortes, no lo cambies
+- Usa el NÚMERO DE ÍNDICE entre [] de cada prenda (0, 1, 2...) — NO copies el ID
 - Respeta el nivel de formalidad indicado arriba al escoger cada prenda
 - Nombre del outfit: máximo 5 palabras
 - Descripción: máximo 15 palabras
 
 Responde SOLO con JSON válido (sin texto adicional, sin markdown):
-{ "outfit": { "name": "nombre corto", "description": "descripción breve", "garments": [{ "id": "ID_EXACTO_DE_LA_LISTA", "order": 1 }] } }`;
+{ "outfit": { "name": "nombre corto", "description": "descripción breve", "garments": [{ "index": 0, "order": 1 }] } }`;
 
     const outfitUserPrompt =
       'Genera un outfit apropiado basándote en las prendas disponibles.';
@@ -917,7 +917,7 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
       outfit?: {
         name?: string;
         description?: string;
-        garments?: { id: string; order?: number }[];
+        garments?: { index?: number; id?: string; order?: number }[];
       };
     };
 
@@ -1037,28 +1037,31 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
       const outfitData = this.parseJsonFromLlm<OutfitAiResponse>(responseText);
 
       const garmentMap = new Map(garmentsWithDescription.map((g) => [g.id, g]));
-      // Normalised map for fuzzy matching (trim + lowercase)
       const garmentMapNorm = new Map(
         garmentsWithDescription.map((g) => [g.id.trim().toLowerCase(), g]),
       );
 
-      const rawIds = (outfitData.outfit?.garments ?? []).map((g) => g.id);
       const selectedGarments = (outfitData.outfit?.garments ?? [])
         .map((g) => {
-          const exact = garmentMap.get(g.id);
-          if (exact) return { ...g, id: exact.id };
-          const norm = garmentMapNorm.get(g.id?.trim().toLowerCase());
-          if (norm) return { ...g, id: norm.id };
+          // Primary: index-based lookup (new approach, no hallucination possible)
+          if (g.index !== undefined && g.index >= 0 && g.index < selectedForPrompt.length) {
+            return { id: selectedForPrompt[g.index].id, order: g.order };
+          }
+          // Fallback: ID matching (for providers that ignore the index instruction)
+          if (g.id) {
+            const exact = garmentMap.get(g.id);
+            if (exact) return { id: exact.id, order: g.order };
+            const norm = garmentMapNorm.get(g.id.trim().toLowerCase());
+            if (norm) return { id: norm.id, order: g.order };
+          }
           return null;
         })
         .filter(Boolean) as Array<{ id: string; order?: number }>;
 
       if (selectedGarments.length === 0) {
         console.warn(
-          '[generateOutfit] IDs devueltos por IA:',
-          rawIds,
-          '| IDs válidos (muestra):',
-          [...garmentMap.keys()].slice(0, 5),
+          '[generateOutfit] respuesta IA:', JSON.stringify(outfitData.outfit?.garments),
+          '| prendas en prompt (muestra):', selectedForPrompt.slice(0, 3).map((g) => g.id),
         );
         throw new BadRequestException(
           'La IA no seleccionó prendas válidas del armario',
@@ -1115,9 +1118,14 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
             const retryText = retryResult.response.text();
             const retryData =
               this.parseJsonFromLlm<OutfitAiResponse>(retryText);
-            const retrySelected = (retryData.outfit?.garments ?? []).filter(
-              (g) => garmentMap.has(g.id),
-            );
+            const retrySelected = (retryData.outfit?.garments ?? [])
+              .map((g) => {
+                if (g.index !== undefined && g.index >= 0 && g.index < selectedForPrompt.length)
+                  return { id: selectedForPrompt[g.index].id, order: g.order };
+                if (g.id && garmentMap.has(g.id)) return { id: g.id, order: g.order };
+                return null;
+              })
+              .filter(Boolean) as Array<{ id: string; order?: number }>;
             const retryFiltered = this.filterGarmentsByCategory(
               retrySelected,
               garmentMap,
