@@ -865,13 +865,13 @@ ${garmentsList}
 
 REGLAS DE COMPOSICIÓN:
 - Máximo 1 TOP, 1 OUTERWEAR, 1 BOTTOM, 1 DRESS (si hay DRESS no incluyas TOP ni BOTTOM), 1 FOOTWEAR, varios ACCESSORY
-- Solo incluye IDs que existan exactamente en la lista de arriba
+- CRÍTICO: Copia el ID exactamente como aparece en "ID: ..." — no lo modifiques, no lo acortes, no lo cambies
 - Respeta el nivel de formalidad indicado arriba al escoger cada prenda
 - Nombre del outfit: máximo 5 palabras
 - Descripción: máximo 15 palabras
 
-Responde SOLO con JSON válido:
-{ "outfit": { "name": "nombre corto", "description": "descripción breve", "garments": [{ "id": "ID_EXACTO", "order": 1 }] } }`;
+Responde SOLO con JSON válido (sin texto adicional, sin markdown):
+{ "outfit": { "name": "nombre corto", "description": "descripción breve", "garments": [{ "id": "ID_EXACTO_DE_LA_LISTA", "order": 1 }] } }`;
 
     const outfitUserPrompt =
       'Genera un outfit apropiado basándote en las prendas disponibles.';
@@ -942,13 +942,33 @@ Responde SOLO con JSON válido:
       const outfitData = this.parseJsonFromLlm<OutfitAiResponse>(responseText);
 
       const garmentMap = new Map(garmentsWithDescription.map((g) => [g.id, g]));
-      const selectedGarments = (outfitData.outfit?.garments ?? []).filter((g) =>
-        garmentMap.has(g.id),
+      // Normalised map for fuzzy matching (trim + lowercase)
+      const garmentMapNorm = new Map(
+        garmentsWithDescription.map((g) => [g.id.trim().toLowerCase(), g]),
       );
-      if (selectedGarments.length === 0)
+
+      const rawIds = (outfitData.outfit?.garments ?? []).map((g) => g.id);
+      const selectedGarments = (outfitData.outfit?.garments ?? [])
+        .map((g) => {
+          const exact = garmentMap.get(g.id);
+          if (exact) return { ...g, id: exact.id };
+          const norm = garmentMapNorm.get(g.id?.trim().toLowerCase());
+          if (norm) return { ...g, id: norm.id };
+          return null;
+        })
+        .filter(Boolean) as Array<{ id: string; order?: number }>;
+
+      if (selectedGarments.length === 0) {
+        console.warn(
+          '[generateOutfit] IDs devueltos por IA:',
+          rawIds,
+          '| IDs válidos (muestra):',
+          [...garmentMap.keys()].slice(0, 5),
+        );
         throw new BadRequestException(
           'La IA no seleccionó prendas válidas del armario',
         );
+      }
 
       let finalGarments = this.filterGarmentsByCategory(
         selectedGarments,
