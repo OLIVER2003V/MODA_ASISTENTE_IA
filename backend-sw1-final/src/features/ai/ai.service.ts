@@ -262,7 +262,7 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       // 1. Gemini (mejor calidad, cuota diaria, sin restricción para ropa)
       try {
         const geminiModel = this.gemini.getGenerativeModel({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           generationConfig: {
             temperature: 0.2,
             maxOutputTokens: 700,
@@ -474,7 +474,7 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       }
 
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Eres un experto en diagramas UML. Corrige ÚNICAMENTE fromMultiplicity y toMultiplicity del diagrama GoJS.\n\n' +
           'REGLAS:\n' +
@@ -502,7 +502,7 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       return {
         originalDiagram: gojsDiagram,
         correctedDiagram,
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
       };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
@@ -525,7 +525,7 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       }
 
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Eres un experto en diagramas UML. Analiza el diagrama GoJS y determina si está correctamente construido.\n\n' +
           'CRITERIOS: lógica de relaciones, consistencia de multiplicidades (solo "1" o "*"), ortografía (clases con Mayúscula, atributos en minúscula), estructura GoJS válida.\n\n' +
@@ -584,7 +584,7 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
         diagram: JSON.stringify(diagramData),
         originalDiagram: gojsDiagram,
         correctedDiagram: diagramData,
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
       };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
@@ -951,7 +951,7 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
     if (!responseText) {
       try {
         const model = this.gemini.getGenerativeModel({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           systemInstruction: outfitSystemPrompt,
           generationConfig: {
             temperature: 0.7,
@@ -974,7 +974,7 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
     if (!responseText && this.cerebras) {
       try {
         const completion = await this.cerebras.chat.completions.create({
-          model: 'llama3.3-70b',
+          model: 'llama3.1-8b',
           messages: [
             { role: 'system', content: outfitSystemPrompt },
             { role: 'user', content: outfitUserPrompt },
@@ -995,7 +995,7 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
     if (!responseText && this.gemini2) {
       try {
         const model2 = this.gemini2.getGenerativeModel({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           systemInstruction: outfitSystemPrompt,
           generationConfig: { temperature: 0.7, maxOutputTokens: 2000, responseMimeType: 'application/json' },
         });
@@ -1105,7 +1105,7 @@ Responde SOLO con JSON válido (sin texto adicional, sin markdown):
           );
           try {
             const retryModel = this.gemini.getGenerativeModel({
-              model: 'gemini-2.5-flash',
+              model: 'gemini-1.5-flash',
               systemInstruction: outfitSystemPrompt,
               generationConfig: {
                 temperature: 0.3,
@@ -1335,7 +1335,7 @@ REGLAS:
     // 1. Gemini (primary — most reliable, already used for garments)
     try {
       const geminiModel = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction,
         generationConfig: { temperature, maxOutputTokens: maxTokens },
       });
@@ -1480,7 +1480,7 @@ REGLAS:
   async translateToSpanish(text: string): Promise<{ translated: string }> {
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         generationConfig: { temperature: 0.1, maxOutputTokens: 400 },
       });
       const result = await model.generateContent(
@@ -1907,7 +1907,7 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
     // 2. Gemini 2.5 Flash
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction,
         generationConfig: { temperature: 0.85, maxOutputTokens: 400 },
       });
@@ -1951,7 +1951,7 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
     if (this.gemini2) {
       try {
         const model2 = this.gemini2.getGenerativeModel({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           systemInstruction,
           generationConfig: { temperature: 0.85, maxOutputTokens: 400 },
         });
@@ -2003,7 +2003,7 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
   async detectAffirmative(text: string): Promise<boolean> {
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         generationConfig: { temperature: 0, maxOutputTokens: 5 },
       });
       const result = await model.generateContent(
@@ -2023,7 +2023,7 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
   ): Promise<string> {
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Eres un asistente experto en moda y estilo personal. Ya ayudaste al usuario a elegir un outfit. ' +
           'La conversación puede continuar sobre moda, consejos de estilo, combinaciones, tendencias o cualquier duda que tenga. ' +
@@ -2141,7 +2141,7 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
       `DESCRIPTION:\n${description}`;
 
     const model = this.gemini.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0,
         maxOutputTokens: 60,
@@ -2602,7 +2602,7 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
 
     // Gemini fallback with 20s timeout
     const model = this.gemini.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.75,
         maxOutputTokens: 2800,
