@@ -1276,6 +1276,59 @@ REGLAS:
     maxTokens = 500,
   ): Promise<string> {
     const base64Image = imageBuffer.toString('base64');
+
+    // 1. Gemini (primary — most reliable, already used for garments)
+    try {
+      const geminiModel = this.gemini.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+        systemInstruction,
+        generationConfig: { temperature, maxOutputTokens: maxTokens },
+      });
+      const result = await geminiModel.generateContent([
+        { inlineData: { data: base64Image, mimeType } },
+        promptText,
+      ]);
+      const text = result.response.text();
+      if (text) {
+        console.log('[Vision] Éxito con Gemini');
+        return text;
+      }
+    } catch (err) {
+      console.warn('[Vision] Gemini falló:', (err as Error).message);
+    }
+
+    // 2. Groq vision (generous daily quota)
+    try {
+      const groqCompletion = await this.groq.chat.completions.create({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          { role: 'system', content: systemInstruction },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: promptText },
+              {
+                type: 'image_url',
+                image_url: { url: `data:${mimeType};base64,${base64Image}` },
+              },
+            ],
+          },
+        ],
+        temperature,
+        max_tokens: maxTokens,
+        stream: false,
+      });
+      const text = (groqCompletion as OpenAI.Chat.ChatCompletion).choices[0]
+        ?.message?.content;
+      if (text) {
+        console.log('[Vision] Éxito con Groq');
+        return text;
+      }
+    } catch (err) {
+      console.warn('[Vision] Groq falló:', (err as Error).message);
+    }
+
+    // 3. OpenRouter free vision models as last resort
     const dataUrl = `data:${mimeType};base64,${base64Image}`;
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemInstruction },
@@ -1288,13 +1341,11 @@ REGLAS:
       },
     ];
 
-    // Free vision models on OpenRouter — tried in order until one succeeds
     const models = [
-      'meta-llama/llama-4-scout:free',
-      'meta-llama/llama-4-maverick:free',
-      'qwen/qwen2-vl-7b-instruct:free',
-      'microsoft/phi-4-multimodal-instruct:free',
-      'mistralai/pixtral-12b:free',
+      'qwen/qwen2.5-vl-7b-instruct:free',
+      'qwen/qwen2.5-vl-72b-instruct:free',
+      'meta-llama/llama-3.2-11b-vision-instruct:free',
+      'moondream/moondream2:free',
     ];
 
     for (let i = 0; i < models.length; i++) {
@@ -1307,7 +1358,6 @@ REGLAS:
           messages,
           temperature,
           max_tokens: maxTokens,
-          // response_format omitido: no todos los modelos lo soportan (causa 400)
           stream: false,
         });
         const text = (completion as OpenAI.Chat.ChatCompletion).choices[0]
@@ -1316,7 +1366,6 @@ REGLAS:
           console.log(`[OpenRouter] Éxito con modelo: ${models[i]}`);
           return text;
         }
-        // Empty response — try next model
         if (i < models.length - 1) continue;
         break;
       } catch (err: unknown) {
