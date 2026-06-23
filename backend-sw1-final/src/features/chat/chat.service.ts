@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { AiService } from 'src/features/ai/ai.service';
 import { NotificationsService } from 'src/common/notifications/notifications.service';
@@ -11,7 +16,11 @@ export class ChatService {
     private readonly push: NotificationsService,
   ) {}
 
-  async getConversationsByUser(userId: string, page: number = 1, limit: number = 10) {
+  async getConversationsByUser(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
@@ -27,7 +36,10 @@ export class ChatService {
           messages: { orderBy: { createdAt: 'asc' } },
           outfit: {
             include: {
-              garmentOutfits: { include: { garment: true }, orderBy: { order: 'asc' } },
+              garmentOutfits: {
+                include: { garment: true },
+                orderBy: { order: 'asc' },
+              },
             },
           },
         },
@@ -50,7 +62,9 @@ export class ChatService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    const userAttr = await this.prisma.userAttribute.findFirst({ where: { userId } });
+    const userAttr = await this.prisma.userAttribute.findFirst({
+      where: { userId },
+    });
 
     // Auto-fetch real-time weather: coords > climateCity > profile climate
     let initialWeather: string | null = null;
@@ -107,15 +121,21 @@ export class ChatService {
       where: { id: conversationId },
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
-    if (conversation.userId !== userId) throw new ForbiddenException('No tienes acceso a esta conversación');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
+    if (conversation.userId !== userId)
+      throw new ForbiddenException('No tienes acceso a esta conversación');
 
     if (conversation.status === 'AWAITING_FACE_IMAGE') {
-      throw new BadRequestException('Usa el botón de cámara para subir tu foto de rostro.');
+      throw new BadRequestException(
+        'Usa el botón de cámara para subir tu foto de rostro.',
+      );
     }
 
     if (conversation.status === 'GENERATING') {
-      throw new BadRequestException('Estoy generando tu outfit, por favor espera un momento...');
+      throw new BadRequestException(
+        'Estoy generando tu outfit, por favor espera un momento...',
+      );
     }
 
     // Guardar mensaje del usuario
@@ -125,15 +145,18 @@ export class ChatService {
 
     // Cargar perfil y prendas del usuario
     const [userAttr, userWithClosets] = await Promise.all([
-      this.prisma.userAttribute.findFirst({ where: { userId: conversation.userId } }),
+      this.prisma.userAttribute.findFirst({
+        where: { userId: conversation.userId },
+      }),
       this.prisma.user.findUnique({
         where: { id: conversation.userId },
         include: { closets: { include: { garments: true } } },
       }),
     ]);
 
-    const allGarments = userWithClosets?.closets.flatMap((c) => c.garments) ?? [];
-    const hasOutfit   = !!conversation.outfitId;
+    const allGarments =
+      userWithClosets?.closets.flatMap((c) => c.garments) ?? [];
+    const hasOutfit = !!conversation.outfitId;
 
     // Historial completo incluyendo el mensaje recién guardado
     const allMessages = [
@@ -143,11 +166,11 @@ export class ChatService {
 
     // Gemini decide qué hacer
     const ai = await this.aiService.fashionChat({
-      messages:     allMessages,
-      userProfile:  userAttr,
-      garments:     allGarments,
+      messages: allMessages,
+      userProfile: userAttr,
+      garments: allGarments,
       hasOutfit,
-      savedEvent:   conversation.event,
+      savedEvent: conversation.event,
       savedWeather: conversation.weather,
     });
 
@@ -157,18 +180,35 @@ export class ChatService {
     // el usuario realmente lo pidió (no fue una inferencia errónea).
     // Si el mensaje del usuario no pide explícitamente otro outfit → chat.
     if (ai.action === 'generate_outfit' && hasOutfit) {
-      const lastAssistantMsg = conversation.messages.filter(m => m.role === 'ASSISTANT').at(-1)?.content ?? '';
-      const aiPromisedGeneration = /voy a (generar|armar|crear)|vamos a generar|te (voy a|armo|creo) (el|un) outfit|generar.*outfit|armar.*outfit|creo.*outfit/i.test(lastAssistantMsg);
-      const userConfirmed = /^(s[ií]|si|sí|yes|dale|ok|okey|claro|perfecto|bueno|va|genial|adelante|hazlo|generalo|gen[eé]ralo|está bien|de acuerdo|listo|vamos|venga)\b/i.test(content.trim());
+      const lastAssistantMsg =
+        conversation.messages.filter((m) => m.role === 'ASSISTANT').at(-1)
+          ?.content ?? '';
+      const aiPromisedGeneration =
+        /voy a (generar|armar|crear)|vamos a generar|te (voy a|armo|creo) (el|un) outfit|generar.*outfit|armar.*outfit|creo.*outfit/i.test(
+          lastAssistantMsg,
+        );
+      const userConfirmed =
+        /^(s[ií]|si|sí|yes|dale|ok|okey|claro|perfecto|bueno|va|genial|adelante|hazlo|generalo|gen[eé]ralo|está bien|de acuerdo|listo|vamos|venga)\b/i.test(
+          content.trim(),
+        );
       const explicitRetry =
-        /otro|diferente|cambiar|no me gusta|no.*gust|opci[oó]n|alternativa|m[aá]s (elegante|formal|casual|abrigado|fresco|c[oó]modo|arreglado)|nuevo outfit|dame otro|quiero otro|mu[eé]strame otro|(dame|armame|generame|hazme|creame|quiero|y) .*outfit|si hace fr[ií]o|si hace calor/i.test(content) ||
+        /otro|diferente|cambiar|no me gusta|no.*gust|opci[oó]n|alternativa|m[aá]s (elegante|formal|casual|abrigado|fresco|c[oó]modo|arreglado)|nuevo outfit|dame otro|quiero otro|mu[eé]strame otro|(dame|armame|generame|hazme|creame|quiero|y) .*outfit|si hace fr[ií]o|si hace calor/i.test(
+          content,
+        ) ||
         (aiPromisedGeneration && userConfirmed);
       if (!explicitRetry) {
-        console.log('[chat.service] IA intentó generate_outfit pero usuario no lo pidió explícitamente → convirtiendo a chat');
+        console.log(
+          '[chat.service] IA intentó generate_outfit pero usuario no lo pidió explícitamente → convirtiendo a chat',
+        );
         ai.action = 'chat';
         // Si el bot decía "te voy a generar...", lo cambiamos para no confundir al usuario prometiendo falsas acciones
-        if (/voy a (generar|armar|crear)|vamos a generar|te (voy a|armo|creo)/i.test(ai.reply)) {
-          ai.reply = '¿Te gustaría que te arme un outfit diferente con esas características? Confírmame para generarlo ✨';
+        if (
+          /voy a (generar|armar|crear)|vamos a generar|te (voy a|armo|creo)/i.test(
+            ai.reply,
+          )
+        ) {
+          ai.reply =
+            '¿Te gustaría que te arme un outfit diferente con esas características? Confírmame para generarlo ✨';
         }
       }
     }
@@ -176,18 +216,29 @@ export class ChatService {
     // ── Corrección 2: forzar generate_outfit si la IA preguntó el clima (que ya tenemos) ──
     if (ai.action === 'chat' && !hasOutfit && effectiveWeather) {
       const detectedEvent = ai.event ?? conversation.event ?? content;
-      const replyAskingWeather = /clima|temperatura|tiempo (que hace|habrá)|calor|frío|lluvi/i.test(ai.reply);
+      const replyAskingWeather =
+        /clima|temperatura|tiempo (que hace|habrá)|calor|frío|lluvi/i.test(
+          ai.reply,
+        );
 
       if (replyAskingWeather || conversation.event) {
-        console.log('[chat.service] Corrección clima: forzando generate_outfit. evento=%s clima=%s', detectedEvent, effectiveWeather);
-        ai.action  = 'generate_outfit';
-        ai.event   = detectedEvent;
+        console.log(
+          '[chat.service] Corrección clima: forzando generate_outfit. evento=%s clima=%s',
+          detectedEvent,
+          effectiveWeather,
+        );
+        ai.action = 'generate_outfit';
+        ai.event = detectedEvent;
         ai.weather = effectiveWeather;
-        ai.reply   = `¡Perfecto! Voy a armar tu outfit para ${detectedEvent} ahora mismo ✨`;
+        ai.reply = `¡Perfecto! Voy a armar tu outfit para ${detectedEvent} ahora mismo ✨`;
       } else if (conversation.messages.length <= 3 && !conversation.event) {
-        console.log('[chat.service] Corrección early: asumiendo mensaje como evento. evento=%s clima=%s', content, effectiveWeather);
-        ai.action  = 'generate_outfit';
-        ai.event   = content;
+        console.log(
+          '[chat.service] Corrección early: asumiendo mensaje como evento. evento=%s clima=%s',
+          content,
+          effectiveWeather,
+        );
+        ai.action = 'generate_outfit';
+        ai.event = content;
         ai.weather = effectiveWeather;
         if (replyAskingWeather) {
           ai.reply = `¡Perfecto! Con eso ya tengo todo para tu outfit ✨`;
@@ -195,11 +246,52 @@ export class ChatService {
       }
     }
 
+    // ── Corrección 3: usuario pide explícitamente un outfit en cualquier punto ──
+    if (ai.action === 'chat' && !hasOutfit) {
+      const userWantsOutfit =
+        /dame (un |el |mi )?(outfit|look|ropa|conjunto)|gen[eé]r(a|ame|alo)|arma(me|lo)|mu[eé]strame (el |un )?(outfit|look|ropa)|hazme (un |el )?(outfit|look)|quiero (ver |el |un )?(outfit|look)|s[ií]\s*$|^(s[ií]|dale|ok|okey|claro|perfecto|bueno|va|listo|vamos|hazlo|adelante|venga)\s*$/i.test(
+          content.trim(),
+        );
+      const lastAiMsg =
+        conversation.messages.filter((m) => m.role === 'ASSISTANT').at(-1)
+          ?.content ?? '';
+      const aiOfferedOutfit =
+        /te (armo|sugiero|genero|hago|preparo|creo)|quieres que te (arme|sugiera|genere|haga)|te puedo armar|puedo (armar|sugerir|generar)|armamos|generamos/i.test(
+          lastAiMsg,
+        );
+
+      if (userWantsOutfit || aiOfferedOutfit) {
+        const detectedEvent =
+          ai.event ??
+          conversation.event ??
+          allMessages
+            .filter((m) => m.role === 'USER')
+            .map((m) => m.content)
+            .find((c) =>
+              /gym|trabajo|fiesta|casual|formal|salir|playa|reunión|cena|iglesia|universidad|escuela/i.test(
+                c,
+              ),
+            ) ??
+          content;
+        const weather =
+          effectiveWeather ?? ai.weather ?? userAttr?.climate ?? 'templado';
+        console.log(
+          '[chat.service] Corrección 3: usuario/IA acordó generar outfit. evento=%s',
+          detectedEvent,
+        );
+        ai.action = 'generate_outfit';
+        ai.event = detectedEvent;
+        ai.weather = weather;
+        ai.reply = `¡Claro! Voy a armar tu outfit ahora mismo ✨`;
+      }
+    }
+
     switch (ai.action) {
       case 'generate_outfit': {
         // Para nuevo outfit: usa el evento/clima ya guardados si la IA no envió nuevos
-        const event   = ai.event   ?? conversation.event   ?? 'un evento especial';
-        const weather = ai.weather ?? conversation.weather ?? userAttr?.climate ?? 'templado';
+        const event = ai.event ?? conversation.event ?? 'un evento especial';
+        const weather =
+          ai.weather ?? conversation.weather ?? userAttr?.climate ?? 'templado';
 
         // Guardar la respuesta conversacional primero
         await this.prisma.message.create({
@@ -232,12 +324,22 @@ export class ChatService {
               conversationId,
             },
           });
-          this.sendOutfitReadyPush(conversation.userId, result.outfit.name ?? 'Tu nuevo outfit');
+          this.sendOutfitReadyPush(
+            conversation.userId,
+            result.outfit.name ?? 'Tu nuevo outfit',
+          );
         } catch (err) {
           // ── Retry automático una vez antes de mostrar error ──────────────
-          console.warn('[chat.service] generateOutfit falló, reintentando...', (err as Error).message.slice(0, 80));
+          console.warn(
+            '[chat.service] generateOutfit falló, reintentando...',
+            (err as Error).message.slice(0, 80),
+          );
           try {
-            const result2 = await this.aiService.generateOutfit({ userId: conversation.userId, event, weather });
+            const result2 = await this.aiService.generateOutfit({
+              userId: conversation.userId,
+              event,
+              weather,
+            });
             await this.prisma.conversation.update({
               where: { id: conversationId },
               data: { outfitId: result2.outfit.id, status: 'CHATTING' },
@@ -251,7 +353,10 @@ export class ChatService {
                 conversationId,
               },
             });
-            this.sendOutfitReadyPush(conversation.userId, result2.outfit.name ?? 'Tu nuevo outfit');
+            this.sendOutfitReadyPush(
+              conversation.userId,
+              result2.outfit.name ?? 'Tu nuevo outfit',
+            );
           } catch {
             await this.prisma.conversation.update({
               where: { id: conversationId },
@@ -259,7 +364,8 @@ export class ChatService {
             });
             await this.prisma.message.create({
               data: {
-                content: 'Lo siento, los servicios de IA están muy ocupados ahora mismo 😅 Escríbeme en un momento e intento de nuevo.',
+                content:
+                  'Lo siento, los servicios de IA están muy ocupados ahora mismo 😅 Escríbeme en un momento e intento de nuevo.',
                 role: 'ASSISTANT',
                 conversationId,
               },
@@ -291,19 +397,31 @@ export class ChatService {
     return this.getConversationWithRelations(conversationId);
   }
 
-  async handleFaceImage(userId: string, conversationId: string, file: Express.Multer.File) {
+  async handleFaceImage(
+    userId: string,
+    conversationId: string,
+    file: Express.Multer.File,
+  ) {
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
     });
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
-    if (conversation.userId !== userId) throw new ForbiddenException('No tienes acceso a esta conversación');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
+    if (conversation.userId !== userId)
+      throw new ForbiddenException('No tienes acceso a esta conversación');
 
     if (conversation.status !== 'AWAITING_FACE_IMAGE') {
-      throw new BadRequestException('La conversación no espera una imagen de rostro en este momento.');
+      throw new BadRequestException(
+        'La conversación no espera una imagen de rostro en este momento.',
+      );
     }
 
     await this.prisma.message.create({
-      data: { content: '[Imagen de rostro enviada]', role: 'USER', conversationId },
+      data: {
+        content: '[Imagen de rostro enviada]',
+        role: 'USER',
+        conversationId,
+      },
     });
 
     const hairstyles = await this.prisma.hairstyle.findMany();
@@ -315,7 +433,8 @@ export class ChatService {
       });
       await this.prisma.message.create({
         data: {
-          content: 'Aún no hay peinados en el catálogo, pero tu outfit está listo. ¿Puedo ayudarte con algo más?',
+          content:
+            'Aún no hay peinados en el catálogo, pero tu outfit está listo. ¿Puedo ayudarte con algo más?',
           role: 'ASSISTANT',
           conversationId,
         },
@@ -357,7 +476,8 @@ export class ChatService {
       });
       await this.prisma.message.create({
         data: {
-          content: 'No pude analizar la imagen ahora mismo 😕 Pero tu outfit sigue listo. ¿Puedo ayudarte con algo más?',
+          content:
+            'No pude analizar la imagen ahora mismo 😕 Pero tu outfit sigue listo. ¿Puedo ayudarte con algo más?',
           role: 'ASSISTANT',
           conversationId,
         },
@@ -373,7 +493,10 @@ export class ChatService {
         messages: { orderBy: { createdAt: 'asc' } },
         outfit: {
           include: {
-            garmentOutfits: { include: { garment: true }, orderBy: { order: 'asc' } },
+            garmentOutfits: {
+              include: { garment: true },
+              orderBy: { order: 'asc' },
+            },
           },
         },
       },
@@ -381,26 +504,42 @@ export class ChatService {
   }
 
   async deleteConversation(userId: string, conversationId: string) {
-    const conversation = await this.prisma.conversation.findUnique({ where: { id: conversationId } });
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
-    if (conversation.userId !== userId) throw new ForbiddenException('No tienes permiso para eliminar esta conversación');
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
+    if (conversation.userId !== userId)
+      throw new ForbiddenException(
+        'No tienes permiso para eliminar esta conversación',
+      );
 
     // Prisma se encarga del borrado en cascada (mensajes) si tu schema de base de datos tiene onDelete: Cascade
     await this.prisma.conversation.delete({ where: { id: conversationId } });
     return { success: true, message: 'Conversación eliminada correctamente' };
   }
 
-  async sendAudioMessage(userId: string, conversationId: string, file: Express.Multer.File) {
-    const text = await this.aiService.transcribeAudio(file.buffer, file.mimetype);
+  async sendAudioMessage(
+    userId: string,
+    conversationId: string,
+    file: Express.Multer.File,
+  ) {
+    const text = await this.aiService.transcribeAudio(
+      file.buffer,
+      file.mimetype,
+    );
     if (!text || text.trim().length === 0) {
-      throw new BadRequestException('No se pudo transcribir el audio. Intenta hablar más claramente.');
+      throw new BadRequestException(
+        'No se pudo transcribir el audio. Intenta hablar más claramente.',
+      );
     }
     return this.sendMessage(userId, conversationId, text.trim());
   }
 
   private sendOutfitReadyPush(userId: string, outfitName: string): void {
-    this.prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } })
-      .then(user => {
+    this.prisma.user
+      .findUnique({ where: { id: userId }, select: { fcmToken: true } })
+      .then((user) => {
         if (user?.fcmToken) {
           return this.push.sendNotification({
             token: user.fcmToken,
