@@ -1,4 +1,11 @@
-import { Injectable, BadRequestException, HttpException, HttpStatus, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { randomUUID } from 'crypto';
@@ -14,23 +21,35 @@ import { PythonAiService } from 'src/common/python/python-ai.service';
 export type TaskStatus = 'pending' | 'processing' | 'done' | 'error';
 
 export interface AiTask {
-  id:        string;
-  status:    TaskStatus;
+  id: string;
+  status: TaskStatus;
   createdAt: Date;
   updatedAt: Date;
-  result?:   unknown;
-  error?:    string;
+  result?: unknown;
+  error?: string;
 }
 
 // ─── Fashion rules dataset (loaded once at startup) ───────────────────────────
 
 interface FashionRules {
-  colorPairings:        { base: string; complementary: string[]; avoid: string[] }[];
-  occasionRules:        { occasion: string; keywords: string[]; preferred: string[]; avoid: string[]; tips: string[] }[];
-  bodyTypeGuidelines:   Record<string, { emphasize: string; tips: string[] }>;
-  garmentPairings:      { item: string; pairs_with: string[]; style: string }[];
-  seasonalRules:        Record<string, { fabrics: string[]; colors: string[]; tips: string[] }>;
-  styleRules:           Record<string, { maxColors: number; patternMix: string; formality: number }>;
+  colorPairings: { base: string; complementary: string[]; avoid: string[] }[];
+  occasionRules: {
+    occasion: string;
+    keywords: string[];
+    preferred: string[];
+    avoid: string[];
+    tips: string[];
+  }[];
+  bodyTypeGuidelines: Record<string, { emphasize: string; tips: string[] }>;
+  garmentPairings: { item: string; pairs_with: string[]; style: string }[];
+  seasonalRules: Record<
+    string,
+    { fabrics: string[]; colors: string[]; tips: string[] }
+  >;
+  styleRules: Record<
+    string,
+    { maxColors: number; patternMix: string; formality: number }
+  >;
 }
 
 function loadFashionRules(): FashionRules {
@@ -38,7 +57,14 @@ function loadFashionRules(): FashionRules {
   try {
     return JSON.parse(fs.readFileSync(rulesPath, 'utf-8')) as FashionRules;
   } catch {
-    return { colorPairings: [], occasionRules: [], bodyTypeGuidelines: {}, garmentPairings: [], seasonalRules: {}, styleRules: {} };
+    return {
+      colorPairings: [],
+      occasionRules: [],
+      bodyTypeGuidelines: {},
+      garmentPairings: [],
+      seasonalRules: {},
+      styleRules: {},
+    };
   }
 }
 
@@ -56,28 +82,33 @@ export class AiService {
   private readonly fashionRules: FashionRules = loadFashionRules();
 
   constructor(
-    private readonly prisma:        PrismaService,
+    private readonly prisma: PrismaService,
     private readonly pythonAiService: PythonAiService,
   ) {
     this.gemini = new GoogleGenerativeAI(envs.geminiApiKey);
     this.openrouter = new OpenAI({
       apiKey: envs.openrouterApiKey,
       baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: { 'HTTP-Referer': 'http://localhost:3000', 'X-Title': 'StyleApp' },
+      defaultHeaders: {
+        'HTTP-Referer': 'http://localhost:3000',
+        'X-Title': 'StyleApp',
+      },
     });
     this.groq = new OpenAI({
       apiKey: envs.groqApiKey,
       baseURL: 'https://api.groq.com/openai/v1',
     });
-    this.logger.log(`Fashion rules loaded: ${this.fashionRules.occasionRules.length} occasion rules, ${this.fashionRules.colorPairings.length} color pairings`);
+    this.logger.log(
+      `Fashion rules loaded: ${this.fashionRules.occasionRules.length} occasion rules, ${this.fashionRules.colorPairings.length} color pairings`,
+    );
   }
 
   // ─── Async queue (HU-18: 202/polling pattern) ─────────────────────────────
 
   enqueueOutfitGeneration(dto: GenerateOutfitDto): AiTask {
     const task: AiTask = {
-      id:        randomUUID(),
-      status:    'pending',
+      id: randomUUID(),
+      status: 'pending',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -93,7 +124,10 @@ export class AiService {
     return this.tasks.get(taskId);
   }
 
-  private async runOutfitGenerationTask(taskId: string, dto: GenerateOutfitDto): Promise<void> {
+  private async runOutfitGenerationTask(
+    taskId: string,
+    dto: GenerateOutfitDto,
+  ): Promise<void> {
     this.updateTask(taskId, { status: 'processing' });
     try {
       const result = await this.generateOutfit(dto);
@@ -111,13 +145,19 @@ export class AiService {
 
   // ─── Fashion rules enrichment helper (HU-18: RAG-style dataset) ────────────
 
-  buildFashionRulesContext(event: string, preferredStyles?: string[], bodyType?: string): string {
-    const lines: string[] = ['FASHION RULES DATASET (use as styling reference):'];
+  buildFashionRulesContext(
+    event: string,
+    preferredStyles?: string[],
+    bodyType?: string,
+  ): string {
+    const lines: string[] = [
+      'FASHION RULES DATASET (use as styling reference):',
+    ];
 
     // Match occasion
     const eventLower = event.toLowerCase();
-    const matchedOccasion = this.fashionRules.occasionRules.find(r =>
-      r.keywords.some(k => eventLower.includes(k)),
+    const matchedOccasion = this.fashionRules.occasionRules.find((r) =>
+      r.keywords.some((k) => eventLower.includes(k)),
     );
     if (matchedOccasion) {
       lines.push(`\nOCCASION (${matchedOccasion.occasion.toUpperCase()}):`);
@@ -137,27 +177,30 @@ export class AiService {
     // Style rules for preferred styles
     if (preferredStyles?.length) {
       const matchedStyles = preferredStyles
-        .map(s => s.toUpperCase())
-        .filter(s => this.fashionRules.styleRules[s]);
+        .map((s) => s.toUpperCase())
+        .filter((s) => this.fashionRules.styleRules[s]);
       if (matchedStyles.length) {
         lines.push('\nSTYLE PREFERENCES:');
-        matchedStyles.forEach(s => {
+        matchedStyles.forEach((s) => {
           const rule = this.fashionRules.styleRules[s];
-          lines.push(`  ${s}: max ${rule.maxColors} colors, pattern mix: ${rule.patternMix}, formality: ${rule.formality}/5`);
+          lines.push(
+            `  ${s}: max ${rule.maxColors} colors, pattern mix: ${rule.patternMix}, formality: ${rule.formality}/5`,
+          );
         });
       }
     }
 
     // Color pairing tips (first 4)
     lines.push('\nCOLOR PAIRING RULES (top pairings):');
-    this.fashionRules.colorPairings.slice(0, 4).forEach(cp => {
-      lines.push(`  ${cp.base} → pairs with: ${cp.complementary.slice(0, 3).join(', ')}; avoid: ${cp.avoid.join(', ')}`);
+    this.fashionRules.colorPairings.slice(0, 4).forEach((cp) => {
+      lines.push(
+        `  ${cp.base} → pairs with: ${cp.complementary.slice(0, 3).join(', ')}; avoid: ${cp.avoid.join(', ')}`,
+      );
     });
 
     return lines.join('\n');
   }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
   async askQuestion(_askQuestionDto: AskQuestionDto): Promise<void> {}
 
   async describeGarment(
@@ -165,7 +208,13 @@ export class AiService {
     mimeType: string,
   ): Promise<{ name: string; description: string; category: string }> {
     try {
-      const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      const validMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+      ];
       let cleanMimeType = mimeType?.split(';')[0]?.trim()?.toLowerCase();
       if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType)) {
         cleanMimeType = 'image/jpeg';
@@ -202,8 +251,12 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       // 1. Gemini (mejor calidad, cuota diaria, sin restricción para ropa)
       try {
         const geminiModel = this.gemini.getGenerativeModel({
-          model: 'gemini-2.5-flash',
-          generationConfig: { temperature: 0.2, maxOutputTokens: 700, responseMimeType: 'application/json' },
+          model: 'gemini-1.5-flash',
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 700,
+            responseMimeType: 'application/json',
+          },
         });
         const result = await geminiModel.generateContent([
           systemPrompt,
@@ -213,7 +266,10 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
         responseText = result.response.text() || null;
         if (responseText) console.log('[Gemini] describeGarment: éxito');
       } catch (geminiErr) {
-        console.warn('[Gemini] describeGarment falló:', (geminiErr as Error).message);
+        console.warn(
+          '[Gemini] describeGarment falló:',
+          (geminiErr as Error).message,
+        );
       }
 
       // 2. Groq (cuota diaria generosa, vision con Llama 4)
@@ -223,19 +279,36 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
             model: 'meta-llama/llama-4-scout-17b-16e-instruct',
             messages: [
               { role: 'system', content: systemPrompt },
-              { role: 'user', content: [
-                { type: 'text', text: 'Analiza esta prenda de vestir y responde SOLO con el JSON pedido.' },
-                { type: 'image_url', image_url: { url: `data:${cleanMimeType};base64,${base64Image}` } },
-              ]},
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Analiza esta prenda de vestir y responde SOLO con el JSON pedido.',
+                  },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:${cleanMimeType};base64,${base64Image}`,
+                    },
+                  },
+                ],
+              },
             ],
             temperature: 0.2,
             max_tokens: 700,
             stream: false,
           });
-          responseText = (groqCompletion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim() || null;
+          responseText =
+            (
+              groqCompletion as OpenAI.Chat.ChatCompletion
+            ).choices[0]?.message?.content?.trim() || null;
           if (responseText) console.log('[Groq] describeGarment: éxito');
         } catch (groqErr) {
-          console.warn('[Groq] describeGarment falló:', (groqErr as Error).message);
+          console.warn(
+            '[Groq] describeGarment falló:',
+            (groqErr as Error).message,
+          );
         }
       }
 
@@ -251,7 +324,10 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
             500,
           );
         } catch (orErr) {
-          console.warn('[OpenRouter] describeGarment falló:', (orErr as Error).message);
+          console.warn(
+            '[OpenRouter] describeGarment falló:',
+            (orErr as Error).message,
+          );
         }
       }
 
@@ -272,32 +348,55 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
                   { role: 'system', content: systemPrompt },
                   {
                     role: 'user',
-                    content: 'Analiza esta prenda de vestir y responde SOLO con el JSON pedido.',
+                    content:
+                      'Analiza esta prenda de vestir y responde SOLO con el JSON pedido.',
                     images: [base64Image],
                   },
                 ],
               }),
             });
             if (ollamaRes.ok) {
-              const ollamaJson = await ollamaRes.json() as { message?: { content?: string } };
+              const ollamaJson = (await ollamaRes.json()) as {
+                message?: { content?: string };
+              };
               responseText = ollamaJson.message?.content?.trim() || null;
-              if (responseText) { console.log(`[Ollama/${ollamaModel}] éxito`); break; }
-              else console.warn(`[Ollama/${ollamaModel}] respuesta vacía`);
+              if (responseText) {
+                console.log(`[Ollama/${ollamaModel}] éxito`);
+                break;
+              } else console.warn(`[Ollama/${ollamaModel}] respuesta vacía`);
             } else {
               const errBody = await ollamaRes.text();
-              console.warn(`[Ollama/${ollamaModel}] HTTP ${ollamaRes.status}:`, errBody.slice(0, 120));
+              console.warn(
+                `[Ollama/${ollamaModel}] HTTP ${ollamaRes.status}:`,
+                errBody.slice(0, 120),
+              );
             }
           } catch (ollamaErr) {
-            console.warn(`[Ollama/${ollamaModel}] falló:`, (ollamaErr as Error).message);
+            console.warn(
+              `[Ollama/${ollamaModel}] falló:`,
+              (ollamaErr as Error).message,
+            );
           }
         }
       }
 
-      if (!responseText) throw new BadRequestException('No se pudo obtener respuesta de la IA');
+      if (!responseText)
+        throw new BadRequestException('No se pudo obtener respuesta de la IA');
 
-      const parsed = this.parseJsonFromLlm<{ category?: string; name?: string; description?: string }>(responseText);
+      const parsed = this.parseJsonFromLlm<{
+        category?: string;
+        name?: string;
+        description?: string;
+      }>(responseText);
 
-      const validCategories = ['TOP', 'OUTERWEAR', 'BOTTOM', 'DRESS', 'FOOTWEAR', 'ACCESSORY'];
+      const validCategories = [
+        'TOP',
+        'OUTERWEAR',
+        'BOTTOM',
+        'DRESS',
+        'FOOTWEAR',
+        'ACCESSORY',
+      ];
       if (!parsed.category || !validCategories.includes(parsed.category)) {
         parsed.category = 'ACCESSORY';
       }
@@ -309,14 +408,20 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      throw new BadRequestException(`Error al describir la prenda: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(
+        `Error al describir la prenda: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
-  async analyzeImage(imageBuffer: Buffer, mimeType: string, additionalContext?: string) {
+  async analyzeImage(
+    imageBuffer: Buffer,
+    mimeType: string,
+    additionalContext?: string,
+  ) {
     try {
       const answer = await this.callOpenRouterVision(
-          'Eres un experto en análisis de diagramas UML y generación de diagramas de clases en formato JSON para GoJS.\n\n' +
+        'Eres un experto en análisis de diagramas UML y generación de diagramas de clases en formato JSON para GoJS.\n\n' +
           '🎯 OBJETIVO: Analizar la imagen y, si contiene un diagrama UML o estructura similar, generar un JSON de GoJS.\n' +
           'Si NO es relevante, responde exactamente: "La imagen no contiene un diagrama UML o estructura que pueda convertirse en un diagrama de clases."\n\n' +
           '🧱 ESTRUCTURA DEL JSON:\n' +
@@ -330,27 +435,35 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
         imageBuffer,
         mimeType,
         0,
-        4000
+        4000,
       );
 
-      if (!answer) throw new BadRequestException('No se pudo obtener respuesta de la IA');
+      if (!answer)
+        throw new BadRequestException('No se pudo obtener respuesta de la IA');
 
       return { imageAnalysis: answer, model: 'grok-4.3' };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      throw new BadRequestException(`Error al analizar la imagen: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(
+        `Error al analizar la imagen: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   async fixMultiplicity(gojsDiagram: unknown) {
     try {
-      const diagram = gojsDiagram as { nodeDataArray?: unknown[]; linkDataArray?: unknown[] };
+      const diagram = gojsDiagram as {
+        nodeDataArray?: unknown[];
+        linkDataArray?: unknown[];
+      };
       if (!diagram.nodeDataArray || !diagram.linkDataArray) {
-        throw new BadRequestException('El JSON debe contener nodeDataArray y linkDataArray');
+        throw new BadRequestException(
+          'El JSON debe contener nodeDataArray y linkDataArray',
+        );
       }
 
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Eres un experto en diagramas UML. Corrige ÚNICAMENTE fromMultiplicity y toMultiplicity del diagrama GoJS.\n\n' +
           'REGLAS:\n' +
@@ -360,7 +473,11 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
           '- Herencia: hijos (*) → padre (1)\n' +
           '- NO cambies keys, names, attributes, methods, locations, categories\n\n' +
           'Responde SOLO con el JSON corregido, sin markdown ni explicaciones.',
-        generationConfig: { temperature: 0.1, maxOutputTokens: 4000, responseMimeType: 'application/json' },
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 4000,
+          responseMimeType: 'application/json',
+        },
       });
 
       const result = await model.generateContent(
@@ -368,29 +485,45 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       );
 
       const correctedDiagram = result.response.text();
-      if (!correctedDiagram) throw new BadRequestException('No se pudo corregir el diagrama');
+      if (!correctedDiagram)
+        throw new BadRequestException('No se pudo corregir el diagrama');
 
-      return { originalDiagram: gojsDiagram, correctedDiagram, model: 'gemini-2.5-flash' };
+      return {
+        originalDiagram: gojsDiagram,
+        correctedDiagram,
+        model: 'gemini-1.5-flash',
+      };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      throw new BadRequestException(`Error al corregir multiplicidades: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(
+        `Error al corregir multiplicidades: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   async validateAndCorrectDiagram(gojsDiagram: unknown) {
     try {
-      const diagram = gojsDiagram as { nodeDataArray?: unknown[]; linkDataArray?: unknown[] };
+      const diagram = gojsDiagram as {
+        nodeDataArray?: unknown[];
+        linkDataArray?: unknown[];
+      };
       if (!diagram.nodeDataArray || !diagram.linkDataArray) {
-        throw new BadRequestException('El JSON debe contener nodeDataArray y linkDataArray');
+        throw new BadRequestException(
+          'El JSON debe contener nodeDataArray y linkDataArray',
+        );
       }
 
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Eres un experto en diagramas UML. Analiza el diagrama GoJS y determina si está correctamente construido.\n\n' +
           'CRITERIOS: lógica de relaciones, consistencia de multiplicidades (solo "1" o "*"), ortografía (clases con Mayúscula, atributos en minúscula), estructura GoJS válida.\n\n' +
           'Responde SOLO con JSON: { "perfect": "yes|no", "diagram": <objeto GoJS corregido o igual> }',
-        generationConfig: { temperature: 0.1, maxOutputTokens: 4000, responseMimeType: 'application/json' },
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 4000,
+          responseMimeType: 'application/json',
+        },
       });
 
       const result = await model.generateContent(
@@ -398,17 +531,22 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
       );
 
       const response = result.response.text();
-      if (!response) throw new BadRequestException('No se pudo validar el diagrama');
+      if (!response)
+        throw new BadRequestException('No se pudo validar el diagrama');
 
       let parsedResponse: { perfect?: string; diagram?: unknown };
       try {
         parsedResponse = JSON.parse(response);
       } catch {
-        throw new BadRequestException('La respuesta de la IA no es un JSON válido');
+        throw new BadRequestException(
+          'La respuesta de la IA no es un JSON válido',
+        );
       }
 
       if (!parsedResponse.perfect || !parsedResponse.diagram) {
-        throw new BadRequestException('La respuesta no tiene la estructura esperada (perfect, diagram)');
+        throw new BadRequestException(
+          'La respuesta no tiene la estructura esperada (perfect, diagram)',
+        );
       }
 
       let diagramData: { nodeDataArray?: unknown[]; linkDataArray?: unknown[] };
@@ -416,14 +554,18 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
         try {
           diagramData = JSON.parse(parsedResponse.diagram);
         } catch {
-          throw new BadRequestException('El diagrama corregido no es un JSON válido');
+          throw new BadRequestException(
+            'El diagrama corregido no es un JSON válido',
+          );
         }
       } else {
         diagramData = parsedResponse.diagram as typeof diagramData;
       }
 
       if (!diagramData.nodeDataArray || !diagramData.linkDataArray) {
-        throw new BadRequestException('El diagrama corregido no mantiene la estructura GoJS correcta');
+        throw new BadRequestException(
+          'El diagrama corregido no mantiene la estructura GoJS correcta',
+        );
       }
 
       return {
@@ -431,11 +573,13 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
         diagram: JSON.stringify(diagramData),
         originalDiagram: gojsDiagram,
         correctedDiagram: diagramData,
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
       };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      throw new BadRequestException(`Error al validar el diagrama: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(
+        `Error al validar el diagrama: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -444,9 +588,16 @@ Category MUST be exactly one of: TOP, OUTERWEAR, BOTTOM, DRESS, FOOTWEAR, ACCESS
     mimeType: string,
   ): Promise<{ description: string; gender: string }> {
     try {
-      const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      const validMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+      ];
       let cleanMimeType = mimeType?.split(';')[0]?.trim()?.toLowerCase();
-      if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType)) cleanMimeType = 'image/jpeg';
+      if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType))
+        cleanMimeType = 'image/jpeg';
 
       const responseText = await this.callOpenRouterVision(
         `Eres un experto estilista capilar. Analiza imágenes de peinados y descríbelos.
@@ -459,15 +610,20 @@ El gender DEBE ser exactamente: MALE, FEMALE o UNISEX`,
         imageBuffer,
         cleanMimeType,
         0.2,
-        500
+        500,
       );
 
-      if (!responseText) throw new BadRequestException('No se pudo obtener respuesta de la IA');
+      if (!responseText)
+        throw new BadRequestException('No se pudo obtener respuesta de la IA');
 
-      const parsed = this.parseJsonFromLlm<{ description?: string; gender?: string }>(responseText);
+      const parsed = this.parseJsonFromLlm<{
+        description?: string;
+        gender?: string;
+      }>(responseText);
 
       const validGenders = ['MALE', 'FEMALE', 'UNISEX'];
-      if (!parsed.gender || !validGenders.includes(parsed.gender)) parsed.gender = 'UNISEX';
+      if (!parsed.gender || !validGenders.includes(parsed.gender))
+        parsed.gender = 'UNISEX';
 
       return {
         description: parsed.description?.trim() || 'Sin descripción disponible',
@@ -475,20 +631,29 @@ El gender DEBE ser exactamente: MALE, FEMALE o UNISEX`,
       };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      throw new BadRequestException(`Error al describir el peinado: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(
+        `Error al describir el peinado: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   // ─── Audio Transcription (Whisper via Groq) ─────────────────────────────────
 
-  async transcribeAudio(audioBuffer: Buffer, mimeType: string): Promise<string> {
+  async transcribeAudio(
+    audioBuffer: Buffer,
+    mimeType: string,
+  ): Promise<string> {
     try {
       const { toFile } = await import('openai');
-      const ext = mimeType.includes('webm') ? '.webm'
-                : mimeType.includes('ogg')  ? '.ogg'
-                : mimeType.includes('wav')  ? '.wav'
-                : mimeType.includes('mp3')  ? '.mp3'
-                : '.m4a';
+      const ext = mimeType.includes('webm')
+        ? '.webm'
+        : mimeType.includes('ogg')
+          ? '.ogg'
+          : mimeType.includes('wav')
+            ? '.wav'
+            : mimeType.includes('mp3')
+              ? '.mp3'
+              : '.m4a';
       const file = await toFile(audioBuffer, `audio${ext}`, { type: mimeType });
       const transcription = await this.groq.audio.transcriptions.create({
         file,
@@ -498,7 +663,9 @@ El gender DEBE ser exactamente: MALE, FEMALE o UNISEX`,
       return transcription.text ?? '';
     } catch (error) {
       this.logger.error('Error transcribiendo audio:', error);
-      throw new BadRequestException('No se pudo transcribir el audio. Asegúrate de hablar claramente.');
+      throw new BadRequestException(
+        'No se pudo transcribir el audio. Asegúrate de hablar claramente.',
+      );
     }
   }
 
@@ -509,9 +676,16 @@ El gender DEBE ser exactamente: MALE, FEMALE o UNISEX`,
     userAttributes?: { gender?: string; faceType?: string },
   ): Promise<{ hairstyleId: string; explanation: string }> {
     try {
-      const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      const validMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+      ];
       let cleanMimeType = mimeType?.split(';')[0]?.trim()?.toLowerCase();
-      if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType)) cleanMimeType = 'image/jpeg';
+      if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType))
+        cleanMimeType = 'image/jpeg';
 
       // Usar índices numéricos en el prompt — NUNCA exponer IDs de BD al AI
       const indexToId = hairstyles.map((h) => h.id);
@@ -542,16 +716,20 @@ hairstyleIndex debe ser un número del 1 al ${hairstyles.length}.`,
         faceImageBuffer,
         cleanMimeType,
         0.3,
-        600
+        600,
       );
 
-      if (!responseText) throw new BadRequestException('No se pudo obtener respuesta de la IA');
+      if (!responseText)
+        throw new BadRequestException('No se pudo obtener respuesta de la IA');
 
       let hairstyleIndex = 1;
       let explanation = 'Peinado recomendado basado en tu tipo de rostro.';
 
       try {
-        const parsed = this.parseJsonFromLlm<{ hairstyleIndex?: number; explanation?: string }>(responseText);
+        const parsed = this.parseJsonFromLlm<{
+          hairstyleIndex?: number;
+          explanation?: string;
+        }>(responseText);
         hairstyleIndex = parsed.hairstyleIndex ?? 1;
         explanation = parsed.explanation?.trim() || explanation;
       } catch {
@@ -576,11 +754,14 @@ hairstyleIndex debe ser un número del 1 al ${hairstyles.length}.`,
 
       return {
         hairstyleId: resolvedId,
-        explanation: explanation || 'Peinado recomendado basado en tu tipo de rostro.',
+        explanation:
+          explanation || 'Peinado recomendado basado en tu tipo de rostro.',
       };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      throw new BadRequestException(`Error al recomendar peinado: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(
+        `Error al recomendar peinado: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -589,47 +770,66 @@ hairstyleIndex debe ser un número del 1 al ${hairstyles.length}.`,
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { userAttributes: true, closets: { include: { garments: true } } },
+      include: {
+        userAttributes: true,
+        closets: { include: { garments: true } },
+      },
     });
 
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
     const allGarments = user.closets.flatMap((c) => c.garments);
-    if (allGarments.length === 0) throw new BadRequestException('El usuario no tiene prendas en su closet');
+    if (allGarments.length === 0)
+      throw new BadRequestException('El usuario no tiene prendas en su closet');
 
     const garmentsWithDescription = allGarments.filter((g) => g.description);
     if (garmentsWithDescription.length === 0) {
-      throw new BadRequestException('Las prendas no tienen descripción. Vuelve a subirlas para que sean analizadas.');
+      throw new BadRequestException(
+        'Las prendas no tienen descripción. Vuelve a subirlas para que sean analizadas.',
+      );
     }
 
     const userAttr = user.userAttributes[0];
     let userDescription = 'Sin atributos especificados';
     if (userAttr) {
       const parts: string[] = [];
-      if (userAttr.gender)   parts.push(`Género: ${userAttr.gender}`);
-      if (userAttr.age)      parts.push(`Edad: ${userAttr.age}`);
-      if (userAttr.stature)  parts.push(`Estatura: ${userAttr.stature} cm`);
+      if (userAttr.gender) parts.push(`Género: ${userAttr.gender}`);
+      if (userAttr.age) parts.push(`Edad: ${userAttr.age}`);
+      if (userAttr.stature) parts.push(`Estatura: ${userAttr.stature} cm`);
       if (userAttr.bodyType) parts.push(`Tipo de cuerpo: ${userAttr.bodyType}`);
       if (userAttr.skinTone) parts.push(`Tono de piel: ${userAttr.skinTone}`);
       if (userAttr.skinSubtone) parts.push(`Subtono: ${userAttr.skinSubtone}`);
       if (userAttr.faceType) parts.push(`Tipo de rostro: ${userAttr.faceType}`);
-      if (userAttr.preferredStyles?.length) parts.push(`Estilos preferidos: ${userAttr.preferredStyles.join(', ')}`);
-      if (userAttr.favoriteColors?.length)  parts.push(`Colores favoritos: ${userAttr.favoriteColors.join(', ')}`);
-      if (userAttr.avoidColors?.length)     parts.push(`Colores a evitar: ${userAttr.avoidColors.join(', ')}`);
+      if (userAttr.preferredStyles?.length)
+        parts.push(
+          `Estilos preferidos: ${userAttr.preferredStyles.join(', ')}`,
+        );
+      if (userAttr.favoriteColors?.length)
+        parts.push(`Colores favoritos: ${userAttr.favoriteColors.join(', ')}`);
+      if (userAttr.avoidColors?.length)
+        parts.push(`Colores a evitar: ${userAttr.avoidColors.join(', ')}`);
       if (userAttr.profession) parts.push(`Profesión: ${userAttr.profession}`);
-      if (userAttr.climate)    parts.push(`Clima habitual: ${userAttr.climate}`);
+      if (userAttr.climate) parts.push(`Clima habitual: ${userAttr.climate}`);
       userDescription = parts.join(' | ') || 'Sin atributos especificados';
     }
 
     const garmentsList = garmentsWithDescription
-      .map((g, i) => `[${i}] ID: ${g.id} | Categoría: ${g.category || 'SIN_CATEGORIA'}\n    Descripción: ${g.description}`)
+      .map(
+        (g, i) =>
+          `[${i}] ID: ${g.id} | Categoría: ${g.category || 'SIN_CATEGORIA'}\n    Descripción: ${g.description}`,
+      )
       .join('\n\n');
 
-    const formalityLevel = /reuni[oó]n|trabajo|oficina|entrevista|boda|iglesia|gala|cena formal|presentaci[oó]n|graduaci[oó]n|negocios|corporativo/i.test(event)
-      ? 'FORMAL'
-      : /teatro|cena|evento social|aniversario|cumple|fiesta elegante/i.test(event)
-        ? 'SEMI_FORMAL'
-        : 'CASUAL';
+    const formalityLevel =
+      /reuni[oó]n|trabajo|oficina|entrevista|boda|iglesia|gala|cena formal|presentaci[oó]n|graduaci[oó]n|negocios|corporativo/i.test(
+        event,
+      )
+        ? 'FORMAL'
+        : /teatro|cena|evento social|aniversario|cumple|fiesta elegante/i.test(
+              event,
+            )
+          ? 'SEMI_FORMAL'
+          : 'CASUAL';
 
     const formalityRules =
       formalityLevel === 'FORMAL'
@@ -673,9 +873,16 @@ REGLAS DE COMPOSICIÓN:
 Responde SOLO con JSON válido:
 { "outfit": { "name": "nombre corto", "description": "descripción breve", "garments": [{ "id": "ID_EXACTO", "order": 1 }] } }`;
 
-    const outfitUserPrompt = 'Genera un outfit apropiado basándote en las prendas disponibles.';
+    const outfitUserPrompt =
+      'Genera un outfit apropiado basándote en las prendas disponibles.';
 
-    type OutfitAiResponse = { outfit?: { name?: string; description?: string; garments?: { id: string; order?: number }[] } };
+    type OutfitAiResponse = {
+      outfit?: {
+        name?: string;
+        description?: string;
+        garments?: { id: string; order?: number }[];
+      };
+    };
 
     let responseText: string | null = null;
 
@@ -685,87 +892,145 @@ Responde SOLO con JSON válido:
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: outfitSystemPrompt },
-          { role: 'user',   content: outfitUserPrompt },
+          { role: 'user', content: outfitUserPrompt },
         ],
         temperature: 0.7,
         max_tokens: 2000,
         stream: false,
       });
-      responseText = (completion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim() ?? null;
+      responseText =
+        (
+          completion as OpenAI.Chat.ChatCompletion
+        ).choices[0]?.message?.content?.trim() ?? null;
       if (responseText) console.log('[generateOutfit] Groq OK');
     } catch (err) {
-      console.warn('[generateOutfit] Groq falló:', (err as Error).message.slice(0, 120));
+      console.warn(
+        '[generateOutfit] Groq falló:',
+        (err as Error).message.slice(0, 120),
+      );
     }
 
     // 2. Gemini 2.5 Flash
     if (!responseText) {
       try {
         const model = this.gemini.getGenerativeModel({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           systemInstruction: outfitSystemPrompt,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2000, responseMimeType: 'application/json' },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2000,
+            responseMimeType: 'application/json',
+          },
         });
         const result = await model.generateContent(outfitUserPrompt);
         responseText = result.response.text() ?? null;
         if (responseText) console.log('[generateOutfit] Gemini OK');
       } catch (err) {
-        console.warn('[generateOutfit] Gemini falló:', (err as Error).message.slice(0, 120));
+        console.warn(
+          '[generateOutfit] Gemini falló:',
+          (err as Error).message.slice(0, 120),
+        );
       }
     }
 
-    if (!responseText) throw new BadRequestException('No se pudo generar el outfit. Los servicios de IA están ocupados, intenta de nuevo.');
+    if (!responseText)
+      throw new BadRequestException(
+        'No se pudo generar el outfit. Los servicios de IA están ocupados, intenta de nuevo.',
+      );
 
     try {
       const outfitData = this.parseJsonFromLlm<OutfitAiResponse>(responseText);
 
       const garmentMap = new Map(garmentsWithDescription.map((g) => [g.id, g]));
-      const selectedGarments = (outfitData.outfit?.garments ?? []).filter((g) => garmentMap.has(g.id));
-      if (selectedGarments.length === 0) throw new BadRequestException('La IA no seleccionó prendas válidas del armario');
+      const selectedGarments = (outfitData.outfit?.garments ?? []).filter((g) =>
+        garmentMap.has(g.id),
+      );
+      if (selectedGarments.length === 0)
+        throw new BadRequestException(
+          'La IA no seleccionó prendas válidas del armario',
+        );
 
-      let finalGarments = this.filterGarmentsByCategory(selectedGarments, garmentMap);
-      if (finalGarments.length === 0) throw new BadRequestException('No se pudo armar un outfit válido con las prendas disponibles');
+      let finalGarments = this.filterGarmentsByCategory(
+        selectedGarments,
+        garmentMap,
+      );
+      if (finalGarments.length === 0)
+        throw new BadRequestException(
+          'No se pudo armar un outfit válido con las prendas disponibles',
+        );
 
       // ── Score outfit compatibility with trained ML model ───────────────────
       const buildPayload = (garments: typeof finalGarments) =>
         garments.map((g) => {
           const full = garmentMap.get(g.id)!;
-          return { category: String(full.category ?? 'TOP'), description: full.description ?? '' };
+          return {
+            category: String(full.category ?? 'TOP'),
+            description: full.description ?? '',
+          };
         });
 
-      let compatResult = await this.pythonAiService.scoreOutfitCompatibility(buildPayload(finalGarments), event);
-      let compatScore  = compatResult ? Math.round(compatResult.score * 100) : 0;
+      let compatResult = await this.pythonAiService.scoreOutfitCompatibility(
+        buildPayload(finalGarments),
+        event,
+      );
+      let compatScore = compatResult ? Math.round(compatResult.score * 100) : 0;
 
       if (compatResult) {
-        console.log(`[generateOutfit] Compatibility score: ${compatResult.score.toFixed(3)} (${compatResult.label}) — model_active=${compatResult.model_active}`);
+        console.log(
+          `[generateOutfit] Compatibility score: ${compatResult.score.toFixed(3)} (${compatResult.label}) — model_active=${compatResult.model_active}`,
+        );
 
         // If score is low, retry with Gemini at lower temperature for a safer outfit
-        if (compatResult.score < 0.60) {
-          console.log('[generateOutfit] Low score — retrying with Gemini (temp=0.3)...');
+        if (compatResult.score < 0.6) {
+          console.log(
+            '[generateOutfit] Low score — retrying with Gemini (temp=0.3)...',
+          );
           try {
             const retryModel = this.gemini.getGenerativeModel({
-              model:              'gemini-2.5-flash',
-              systemInstruction:  outfitSystemPrompt,
-              generationConfig:   { temperature: 0.3, maxOutputTokens: 2000, responseMimeType: 'application/json' },
+              model: 'gemini-1.5-flash',
+              systemInstruction: outfitSystemPrompt,
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 2000,
+                responseMimeType: 'application/json',
+              },
             });
-            const retryResult = await retryModel.generateContent(outfitUserPrompt);
-            const retryText   = retryResult.response.text();
-            const retryData   = this.parseJsonFromLlm<OutfitAiResponse>(retryText);
-            const retrySelected = (retryData.outfit?.garments ?? []).filter((g) => garmentMap.has(g.id));
-            const retryFiltered = this.filterGarmentsByCategory(retrySelected, garmentMap);
+            const retryResult =
+              await retryModel.generateContent(outfitUserPrompt);
+            const retryText = retryResult.response.text();
+            const retryData =
+              this.parseJsonFromLlm<OutfitAiResponse>(retryText);
+            const retrySelected = (retryData.outfit?.garments ?? []).filter(
+              (g) => garmentMap.has(g.id),
+            );
+            const retryFiltered = this.filterGarmentsByCategory(
+              retrySelected,
+              garmentMap,
+            );
 
             if (retryFiltered.length > 0) {
-              const retryScore = await this.pythonAiService.scoreOutfitCompatibility(buildPayload(retryFiltered), event);
+              const retryScore =
+                await this.pythonAiService.scoreOutfitCompatibility(
+                  buildPayload(retryFiltered),
+                  event,
+                );
               if (retryScore && retryScore.score > compatResult.score) {
-                console.log(`[generateOutfit] Retry improved score: ${retryScore.score.toFixed(3)} — using Gemini outfit`);
+                console.log(
+                  `[generateOutfit] Retry improved score: ${retryScore.score.toFixed(3)} — using Gemini outfit`,
+                );
                 finalGarments = retryFiltered;
-                compatScore   = Math.round(retryScore.score * 100);
-                compatResult  = retryScore;
+                compatScore = Math.round(retryScore.score * 100);
+                compatResult = retryScore;
                 // Use Gemini's outfit name/description if available
-                if (retryData.outfit?.name) outfitData.outfit = retryData.outfit;
+                if (retryData.outfit?.name)
+                  outfitData.outfit = retryData.outfit;
               }
             }
           } catch (retryErr) {
-            console.warn('[generateOutfit] Retry failed, using original outfit:', (retryErr as Error).message);
+            console.warn(
+              '[generateOutfit] Retry failed, using original outfit:',
+              (retryErr as Error).message,
+            );
           }
         }
       }
@@ -773,23 +1038,41 @@ Responde SOLO con JSON válido:
 
       const newOutfit = await this.prisma.outfit.create({
         data: {
-          name:        outfitData.outfit?.name ?? 'Outfit generado',
+          name: outfitData.outfit?.name ?? 'Outfit generado',
           description: outfitData.outfit?.description ?? '',
-          score:       compatScore,
+          score: compatScore,
           garmentOutfits: {
-            create: finalGarments.map((g: { id: string; order?: number }, i: number) => ({
-              garmentId: g.id,
-              order:     g.order ?? i + 1,
-            })),
+            create: finalGarments.map(
+              (g: { id: string; order?: number }, i: number) => ({
+                garmentId: g.id,
+                order: g.order ?? i + 1,
+              }),
+            ),
           },
         },
-        include: { garmentOutfits: { include: { garment: true }, orderBy: { order: 'asc' } } },
+        include: {
+          garmentOutfits: {
+            include: { garment: true },
+            orderBy: { order: 'asc' },
+          },
+        },
       });
 
-      return { success: true, outfit: newOutfit, aiSuggestion: outfitData.outfit, compatibilityScore: compatScore };
+      return {
+        success: true,
+        outfit: newOutfit,
+        aiSuggestion: outfitData.outfit,
+        compatibilityScore: compatScore,
+      };
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
-      throw new BadRequestException(`Error al procesar el outfit: ${error instanceof Error ? error.message : String(error)}`);
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      )
+        throw error;
+      throw new BadRequestException(
+        `Error al procesar el outfit: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -798,14 +1081,25 @@ Responde SOLO con JSON válido:
     mimeType: string,
     isFullBody = false,
   ): Promise<{
-    faceType?: string; skinTone?: string; skinSubtone?: string;
-    hairColor?: string; hairType?: string; eyeColor?: string;
-    gender?: string; bodyType?: string;
+    faceType?: string;
+    skinTone?: string;
+    skinSubtone?: string;
+    hairColor?: string;
+    hairType?: string;
+    eyeColor?: string;
+    gender?: string;
+    bodyType?: string;
     confidence: Record<string, number>;
   }> {
-    const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const validMimeTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ];
     let cleanMimeType = mimeType?.split(';')[0]?.trim()?.toLowerCase();
-    if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType)) cleanMimeType = 'image/jpeg';
+    if (!cleanMimeType || !validMimeTypes.includes(cleanMimeType))
+      cleanMimeType = 'image/jpeg';
 
     const bodyTypeField = isFullBody
       ? `- "bodyType": uno exacto de PEAR | RECTANGLE | HOURGLASS | APPLE | INVERTED_TRIANGLE`
@@ -836,7 +1130,7 @@ REGLAS:
       imageBuffer,
       cleanMimeType,
       0.1,
-      2048
+      2048,
     );
 
     if (!text) throw new BadRequestException('Sin respuesta de la IA');
@@ -848,17 +1142,60 @@ REGLAS:
       opts.includes(val as string) ? (val as string) : undefined;
 
     return {
-      faceType:    pick(parsed.faceType,    ['OVAL','ROUND','SQUARE','HEART','OBLONG']),
-      skinTone:    pick(parsed.skinTone,    ['LIGHT','MEDIUM_LIGHT','MEDIUM','MEDIUM_DARK','DARK']),
-      skinSubtone: pick(parsed.skinSubtone, ['WARM','COOL','NEUTRAL']),
-      hairColor:   pick(parsed.hairColor,   ['BLACK','DARK_BROWN','BROWN','LIGHT_BROWN','BLONDE','PLATINUM','RED','GRAY','WHITE']),
-      hairType:    pick(parsed.hairType,    ['STRAIGHT','WAVY','CURLY','COILY']),
-      eyeColor:    pick(parsed.eyeColor,    ['DARK_BROWN','BROWN','LIGHT_BROWN','HAZEL','AMBER','BLUE','LIGHT_BLUE','GREEN','LIGHT_GREEN','GRAY','BLACK']),
-      gender:      pick(parsed.gender,      ['MALE','FEMALE','NON_BINARY']),
-      bodyType:    isFullBody ? pick(parsed.bodyType, ['PEAR','RECTANGLE','HOURGLASS','APPLE','INVERTED_TRIANGLE']) : undefined,
-      confidence:  typeof parsed.confidence === 'object' && parsed.confidence !== null
-        ? parsed.confidence as Record<string, number>
-        : {},
+      faceType: pick(parsed.faceType, [
+        'OVAL',
+        'ROUND',
+        'SQUARE',
+        'HEART',
+        'OBLONG',
+      ]),
+      skinTone: pick(parsed.skinTone, [
+        'LIGHT',
+        'MEDIUM_LIGHT',
+        'MEDIUM',
+        'MEDIUM_DARK',
+        'DARK',
+      ]),
+      skinSubtone: pick(parsed.skinSubtone, ['WARM', 'COOL', 'NEUTRAL']),
+      hairColor: pick(parsed.hairColor, [
+        'BLACK',
+        'DARK_BROWN',
+        'BROWN',
+        'LIGHT_BROWN',
+        'BLONDE',
+        'PLATINUM',
+        'RED',
+        'GRAY',
+        'WHITE',
+      ]),
+      hairType: pick(parsed.hairType, ['STRAIGHT', 'WAVY', 'CURLY', 'COILY']),
+      eyeColor: pick(parsed.eyeColor, [
+        'DARK_BROWN',
+        'BROWN',
+        'LIGHT_BROWN',
+        'HAZEL',
+        'AMBER',
+        'BLUE',
+        'LIGHT_BLUE',
+        'GREEN',
+        'LIGHT_GREEN',
+        'GRAY',
+        'BLACK',
+      ]),
+      gender: pick(parsed.gender, ['MALE', 'FEMALE', 'NON_BINARY']),
+      bodyType: isFullBody
+        ? pick(parsed.bodyType, [
+            'PEAR',
+            'RECTANGLE',
+            'HOURGLASS',
+            'APPLE',
+            'INVERTED_TRIANGLE',
+          ])
+        : undefined,
+      confidence:
+        typeof parsed.confidence === 'object' && parsed.confidence !== null
+          ? (parsed.confidence as Record<string, number>)
+          : {},
     };
   }
 
@@ -874,24 +1211,29 @@ REGLAS:
     const dataUrl = `data:${mimeType};base64,${base64Image}`;
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemInstruction },
-      { role: 'user', content: [
-        { type: 'text', text: promptText },
-        { type: 'image_url', image_url: { url: dataUrl } },
-      ]},
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: promptText },
+          { type: 'image_url', image_url: { url: dataUrl } },
+        ],
+      },
     ];
 
     // Free vision models on OpenRouter — tried in order until one succeeds
     const models = [
-      'nvidia/nemotron-nano-12b-v2-vl:free',
-      'google/gemma-4-26b-a4b-it:free',
-      'google/gemma-4-31b-it:free',
-      'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-      'baidu/qianfan-ocr-fast:free',
+      'meta-llama/llama-4-scout:free',
+      'meta-llama/llama-4-maverick:free',
+      'qwen/qwen2-vl-7b-instruct:free',
+      'microsoft/phi-4-multimodal-instruct:free',
+      'mistralai/pixtral-12b:free',
     ];
 
     for (let i = 0; i < models.length; i++) {
       try {
-        console.log(`[OpenRouter] Intentando modelo ${i + 1}/${models.length}: ${models[i]}`);
+        console.log(
+          `[OpenRouter] Intentando modelo ${i + 1}/${models.length}: ${models[i]}`,
+        );
         const completion = await this.openrouter.chat.completions.create({
           model: models[i],
           messages,
@@ -900,7 +1242,8 @@ REGLAS:
           // response_format omitido: no todos los modelos lo soportan (causa 400)
           stream: false,
         });
-        const text = (completion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content;
+        const text = (completion as OpenAI.Chat.ChatCompletion).choices[0]
+          ?.message?.content;
         if (text) {
           console.log(`[OpenRouter] Éxito con modelo: ${models[i]}`);
           return text;
@@ -910,8 +1253,14 @@ REGLAS:
         break;
       } catch (err: unknown) {
         const status = (err as { status?: number })?.status;
-        console.warn(`[OpenRouter] Modelo ${models[i]} falló con status ${status ?? 'desconocido'}`);
-        if ((status === 400 || status === 404 || status === 429) && i < models.length - 1) continue;
+        console.warn(
+          `[OpenRouter] Modelo ${models[i]} falló con status ${status ?? 'desconocido'}`,
+        );
+        if (
+          (status === 400 || status === 404 || status === 429) &&
+          i < models.length - 1
+        )
+          continue;
         if (status === 429) {
           throw new HttpException(
             'El servicio de IA está temporalmente sobrecargado. Esperá unos segundos e intentá de nuevo.',
@@ -921,7 +1270,10 @@ REGLAS:
         throw err;
       }
     }
-    throw new HttpException('No hay modelos de visión disponibles en este momento.', HttpStatus.SERVICE_UNAVAILABLE);
+    throw new HttpException(
+      'No hay modelos de visión disponibles en este momento.',
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
   }
 
   private filterGarmentsByCategory(
@@ -944,19 +1296,23 @@ REGLAS:
       }
     }
 
-    const hasDress = filtered.some((g) => garmentMap.get(g.id)?.category === 'DRESS');
+    const hasDress = filtered.some(
+      (g) => garmentMap.get(g.id)?.category === 'DRESS',
+    );
     if (!hasDress) return filtered;
-    return filtered.filter((g) => !['TOP', 'BOTTOM'].includes(garmentMap.get(g.id)?.category ?? ''));
+    return filtered.filter(
+      (g) => !['TOP', 'BOTTOM'].includes(garmentMap.get(g.id)?.category ?? ''),
+    );
   }
 
   async translateToSpanish(text: string): Promise<{ translated: string }> {
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         generationConfig: { temperature: 0.1, maxOutputTokens: 400 },
       });
       const result = await model.generateContent(
-        `Translate this fashion garment description to natural Spanish. Return ONLY the translated text, no explanations, no quotes:\n\n${text}`
+        `Translate this fashion garment description to natural Spanish. Return ONLY the translated text, no explanations, no quotes:\n\n${text}`,
       );
       const translated = result.response.text().trim();
       if (!translated) throw new Error('Empty response');
@@ -966,16 +1322,24 @@ REGLAS:
     }
   }
 
-
-  async generateOutfitPreview(prompt: string, userId?: string, outfitName?: string): Promise<{ imageBase64: string; mimeType: string }> {
+  async generateOutfitPreview(
+    prompt: string,
+    userId?: string,
+    outfitName?: string,
+  ): Promise<{ imageBase64: string; mimeType: string }> {
     // ── Recopilar datos del usuario ──────────────────────────────────────────
-    let attr: Awaited<ReturnType<typeof this.prisma.userAttribute.findFirst>> = null;
+    let attr: Awaited<ReturnType<typeof this.prisma.userAttribute.findFirst>> =
+      null;
     let profilePhotoUrl: string | null = null;
 
     if (userId) {
       const [attrResult, user] = await Promise.all([
-        this.prisma.userAttribute.findFirst({ where: { userId } }).catch(() => null),
-        this.prisma.user.findUnique({ where: { id: userId }, select: { profilePhoto: true } }).catch(() => null),
+        this.prisma.userAttribute
+          .findFirst({ where: { userId } })
+          .catch(() => null),
+        this.prisma.user
+          .findUnique({ where: { id: userId }, select: { profilePhoto: true } })
+          .catch(() => null),
       ]);
       attr = attrResult;
       profilePhotoUrl = user?.profilePhoto ?? null;
@@ -985,15 +1349,22 @@ REGLAS:
     const buildPersonDesc = () => {
       if (!attr) return 'person';
       const p: string[] = [];
-      if (attr.age)      p.push(`${attr.age}-year-old`);
-      if (attr.gender)   p.push(attr.gender.toLowerCase());
+      if (attr.age) p.push(`${attr.age}-year-old`);
+      if (attr.gender) p.push(attr.gender.toLowerCase());
       p.push('person');
-      if (attr.stature)  p.push(`${attr.stature}cm tall`);
-      if (attr.bodyType) p.push(attr.bodyType.toLowerCase().replace('_', ' ') + ' body type');
-      const skin = [attr.skinTone?.toLowerCase().replace('_', ' '), attr.skinSubtone ? attr.skinSubtone.toLowerCase() + ' undertone' : ''].filter(Boolean);
-      if (skin.length)   p.push(skin.join(', ') + ' skin');
-      const hair = [attr.hairColor?.toLowerCase(), attr.hairType?.toLowerCase()].filter(Boolean);
-      if (hair.length)   p.push(hair.join(' ') + ' hair');
+      if (attr.stature) p.push(`${attr.stature}cm tall`);
+      if (attr.bodyType)
+        p.push(attr.bodyType.toLowerCase().replace('_', ' ') + ' body type');
+      const skin = [
+        attr.skinTone?.toLowerCase().replace('_', ' '),
+        attr.skinSubtone ? attr.skinSubtone.toLowerCase() + ' undertone' : '',
+      ].filter(Boolean);
+      if (skin.length) p.push(skin.join(', ') + ' skin');
+      const hair = [
+        attr.hairColor?.toLowerCase(),
+        attr.hairType?.toLowerCase(),
+      ].filter(Boolean);
+      if (hair.length) p.push(hair.join(' ') + ' hair');
       if (attr.eyeColor) p.push(attr.eyeColor.toLowerCase() + ' eyes');
       return p.join(', ');
     };
@@ -1009,21 +1380,29 @@ REGLAS:
     // ── Intento 1: img2img con la foto de perfil del usuario ────────────────
     if (profilePhotoUrl) {
       try {
-        console.log('[CF img2img] Intentando con foto de perfil del usuario...');
+        console.log(
+          '[CF img2img] Intentando con foto de perfil del usuario...',
+        );
 
         // Redimensionar via Cloudinary si es posible (512x512 JPEG, ~20-50KB)
         const fetchUrl = profilePhotoUrl.includes('cloudinary.com')
-          ? profilePhotoUrl.replace('/upload/', '/upload/w_512,h_512,c_fill,f_jpg,q_70/')
+          ? profilePhotoUrl.replace(
+              '/upload/',
+              '/upload/w_512,h_512,c_fill,f_jpg,q_70/',
+            )
           : profilePhotoUrl;
 
         const photoRes = await fetch(fetchUrl);
-        if (!photoRes.ok) throw new Error(`No se pudo descargar foto: HTTP ${photoRes.status}`);
+        if (!photoRes.ok)
+          throw new Error(`No se pudo descargar foto: HTTP ${photoRes.status}`);
 
         const photoBuffer = Buffer.from(await photoRes.arrayBuffer());
         const imageArray = Array.from(new Uint8Array(photoBuffer));
 
         // Prompt estilo SD: ropa primero con énfasis, persona después
-        const styleContext = outfitName ? `outfit style: "${outfitName}", ` : '';
+        const styleContext = outfitName
+          ? `outfit style: "${outfitName}", `
+          : '';
         const sdPrompt =
           `${styleContext}(${prompt}:1.3), ` +
           `full body shot head to toe, ${personDesc}, ` +
@@ -1034,7 +1413,10 @@ REGLAS:
 
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${envs.cfApiToken}`, 'Content-Type': 'application/json' },
+          headers: {
+            Authorization: `Bearer ${envs.cfApiToken}`,
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             prompt: sdPrompt,
             image: imageArray,
@@ -1056,9 +1438,15 @@ REGLAS:
         if (imageBase64.length < 100) throw new Error('Imagen vacía');
 
         console.log('[CF img2img] Éxito con foto de perfil');
-        return { imageBase64, mimeType: contentType.split(';')[0] || 'image/jpeg' };
+        return {
+          imageBase64,
+          mimeType: contentType.split(';')[0] || 'image/jpeg',
+        };
       } catch (e) {
-        console.warn('[CF img2img] Falló, usando FLUX como fallback:', (e as Error).message.slice(0, 100));
+        console.warn(
+          '[CF img2img] Falló, usando FLUX como fallback:',
+          (e as Error).message.slice(0, 100),
+        );
       }
     }
 
@@ -1078,27 +1466,34 @@ REGLAS:
 
     const res = await fetch(fluxUrl, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${envs.cfApiToken}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${envs.cfApiToken}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ prompt: fluxPrompt, num_steps: 8 }),
     });
 
     if (!res.ok) {
       const err = await res.text();
       console.error('[CF FLUX] Error HTTP', res.status, err.slice(0, 300));
-      throw new BadRequestException('No se pudo generar la imagen. Intentá de nuevo.');
+      throw new BadRequestException(
+        'No se pudo generar la imagen. Intentá de nuevo.',
+      );
     }
 
     const contentType = res.headers.get('content-type') ?? 'image/jpeg';
     if (contentType.includes('application/json')) {
-      const json = await res.json() as { result?: { image?: string } };
+      const json = (await res.json()) as { result?: { image?: string } };
       const imageBase64 = json?.result?.image;
-      if (!imageBase64) throw new BadRequestException('Respuesta inesperada de Cloudflare AI');
+      if (!imageBase64)
+        throw new BadRequestException('Respuesta inesperada de Cloudflare AI');
       return { imageBase64, mimeType: 'image/jpeg' };
     }
 
     const arrayBuffer = await res.arrayBuffer();
     const imageBase64 = Buffer.from(arrayBuffer).toString('base64');
-    if (imageBase64.length < 100) throw new BadRequestException('Imagen vacía recibida');
+    if (imageBase64.length < 100)
+      throw new BadRequestException('Imagen vacía recibida');
 
     console.log('[CF FLUX] Imagen generada exitosamente');
     return { imageBase64, mimeType: contentType.split(';')[0] };
@@ -1107,43 +1502,94 @@ REGLAS:
   async fashionChat(params: {
     messages: { role: 'USER' | 'ASSISTANT'; content: string }[];
     userProfile: {
-      gender?: string | null; age?: number | null; stature?: number | null;
-      bodyType?: string | null; skinTone?: string | null; skinSubtone?: string | null;
-      preferredStyles?: string[]; favoriteColors?: string[]; avoidColors?: string[];
-      profession?: string | null; climate?: string | null; climateCity?: string | null;
+      gender?: string | null;
+      age?: number | null;
+      stature?: number | null;
+      bodyType?: string | null;
+      skinTone?: string | null;
+      skinSubtone?: string | null;
+      preferredStyles?: string[];
+      favoriteColors?: string[];
+      avoidColors?: string[];
+      profession?: string | null;
+      climate?: string | null;
+      climateCity?: string | null;
     } | null;
-    garments: { id: string; name: string | null; description: string | null; category: string | null }[];
+    garments: {
+      id: string;
+      name: string | null;
+      description: string | null;
+      category: string | null;
+    }[];
     hasOutfit: boolean;
     savedEvent?: string | null;
     savedWeather?: string | null;
-  }): Promise<{ reply: string; action: 'chat' | 'generate_outfit' | 'request_face_photo'; event?: string; weather?: string }> {
-    const { messages, userProfile, garments, hasOutfit, savedEvent, savedWeather } = params;
+  }): Promise<{
+    reply: string;
+    action: 'chat' | 'generate_outfit' | 'request_face_photo';
+    event?: string;
+    weather?: string;
+  }> {
+    const {
+      messages,
+      userProfile,
+      garments,
+      hasOutfit,
+      savedEvent,
+      savedWeather,
+    } = params;
 
     // Perfil del usuario en texto
     const profileParts: string[] = [];
     if (userProfile) {
-      if (userProfile.gender)   profileParts.push(`Género: ${userProfile.gender}`);
-      if (userProfile.age)      profileParts.push(`Edad: ${userProfile.age}`);
-      if (userProfile.stature)  profileParts.push(`Estatura: ${userProfile.stature}cm`);
-      if (userProfile.bodyType) profileParts.push(`Cuerpo: ${userProfile.bodyType}`);
-      if (userProfile.skinTone) profileParts.push(`Tono de piel: ${userProfile.skinTone}`);
-      if (userProfile.skinSubtone) profileParts.push(`Subtono: ${userProfile.skinSubtone}`);
-      if (userProfile.preferredStyles?.length) profileParts.push(`Estilos preferidos: ${userProfile.preferredStyles.join(', ')}`);
-      if (userProfile.favoriteColors?.length)  profileParts.push(`Colores favoritos: ${userProfile.favoriteColors.join(', ')}`);
-      if (userProfile.avoidColors?.length)     profileParts.push(`Evita colores: ${userProfile.avoidColors.join(', ')}`);
-      if (userProfile.profession) profileParts.push(`Profesión: ${userProfile.profession}`);
-      if (userProfile.climate)    profileParts.push(`Clima habitual: ${userProfile.climate}${userProfile.climateCity ? ` (${userProfile.climateCity})` : ''}`);
+      if (userProfile.gender)
+        profileParts.push(`Género: ${userProfile.gender}`);
+      if (userProfile.age) profileParts.push(`Edad: ${userProfile.age}`);
+      if (userProfile.stature)
+        profileParts.push(`Estatura: ${userProfile.stature}cm`);
+      if (userProfile.bodyType)
+        profileParts.push(`Cuerpo: ${userProfile.bodyType}`);
+      if (userProfile.skinTone)
+        profileParts.push(`Tono de piel: ${userProfile.skinTone}`);
+      if (userProfile.skinSubtone)
+        profileParts.push(`Subtono: ${userProfile.skinSubtone}`);
+      if (userProfile.preferredStyles?.length)
+        profileParts.push(
+          `Estilos preferidos: ${userProfile.preferredStyles.join(', ')}`,
+        );
+      if (userProfile.favoriteColors?.length)
+        profileParts.push(
+          `Colores favoritos: ${userProfile.favoriteColors.join(', ')}`,
+        );
+      if (userProfile.avoidColors?.length)
+        profileParts.push(
+          `Evita colores: ${userProfile.avoidColors.join(', ')}`,
+        );
+      if (userProfile.profession)
+        profileParts.push(`Profesión: ${userProfile.profession}`);
+      if (userProfile.climate)
+        profileParts.push(
+          `Clima habitual: ${userProfile.climate}${userProfile.climateCity ? ` (${userProfile.climateCity})` : ''}`,
+        );
     }
-    const profileDesc = profileParts.length ? profileParts.join(' | ') : 'Sin datos de perfil';
+    const profileDesc = profileParts.length
+      ? profileParts.join(' | ')
+      : 'Sin datos de perfil';
 
     // Lista de prendas resumida
     const garmentsList = garments.length
-      ? garments.map(g => `[${g.id}] ${g.name ?? 'Sin nombre'} (${g.category ?? '?'}): ${(g.description ?? '').slice(0, 90)}`).join('\n')
+      ? garments
+          .map(
+            (g) =>
+              `[${g.id}] ${g.name ?? 'Sin nombre'} (${g.category ?? '?'}): ${(g.description ?? '').slice(0, 90)}`,
+          )
+          .join('\n')
       : 'Sin prendas disponibles';
 
     // Historial de conversación formateado
-    const historyText = messages.slice(-14)
-      .map(m => `${m.role === 'USER' ? 'Usuario' : 'Stylist'}: ${m.content}`)
+    const historyText = messages
+      .slice(-14)
+      .map((m) => `${m.role === 'USER' ? 'Usuario' : 'Stylist'}: ${m.content}`)
       .join('\n\n');
 
     // Clima efectivo: puede venir de la conversación guardada o del perfil
@@ -1154,13 +1600,25 @@ REGLAS:
 
     // Construir secciones de datos confirmados vs pendientes
     const confirmedLines: string[] = [];
-    const pendingLines:   string[] = [];
+    const pendingLines: string[] = [];
 
-    if (savedEvent)           confirmedLines.push(`✅ EVENTO: "${savedEvent}" — confirmado, NO preguntes`);
-    else                       pendingLines.push(`❌ EVENTO: desconocido — necesitas que el usuario te lo diga`);
+    if (savedEvent)
+      confirmedLines.push(
+        `✅ EVENTO: "${savedEvent}" — confirmado, NO preguntes`,
+      );
+    else
+      pendingLines.push(
+        `❌ EVENTO: desconocido — necesitas que el usuario te lo diga`,
+      );
 
-    if (effectiveWeatherLabel) confirmedLines.push(`✅ CLIMA: "${effectiveWeatherLabel}" — ${savedWeather ? 'confirmado por el usuario' : 'tomado del perfil'}, NO preguntes`);
-    else                        pendingLines.push(`❌ CLIMA: desconocido — necesitas que el usuario te lo diga`);
+    if (effectiveWeatherLabel)
+      confirmedLines.push(
+        `✅ CLIMA: "${effectiveWeatherLabel}" — ${savedWeather ? 'confirmado por el usuario' : 'tomado del perfil'}, NO preguntes`,
+      );
+    else
+      pendingLines.push(
+        `❌ CLIMA: desconocido — necesitas que el usuario te lo diga`,
+      );
 
     const dataSection = [...confirmedLines, ...pendingLines].join('\n');
     const canGenerateNow = !!effectiveWeather; // si hay clima, solo falta evento
@@ -1173,7 +1631,9 @@ ${profileDesc}
 PRENDAS DISPONIBLES:
 ${garmentsList}
 
-${hasOutfit ? `
+${
+  hasOutfit
+    ? `
 ESTADO: Ya generaste un outfit para "${savedEvent ?? 'el evento'}" (clima: ${effectiveWeatherLabel ?? 'desconocido'}).
 
 QUÉ PUEDES HACER AHORA:
@@ -1191,12 +1651,18 @@ CASO C — El usuario quiere recomendación de peinado y lo confirma
 → action "request_face_photo"
 
 ⚠️ CRÍTICO: Si ya en mensajes anteriores dijiste que ibas a generar un nuevo outfit y el usuario confirmó (sí, ok, dale, generalo, hazlo) → usa generate_outfit AHORA, no hagas más preguntas.
-` : `
+`
+    : `
 DATOS PARA GENERAR EL OUTFIT:
 ${dataSection}
-${canGenerateNow ? `
-⚡ REGLA CRÍTICA: El clima YA está confirmado ("${effectiveWeatherLabel}"). En cuanto el usuario mencione el EVENTO, devuelve action "generate_outfit" DE INMEDIATO sin más preguntas.` : ''}
-`}
+${
+  canGenerateNow
+    ? `
+⚡ REGLA CRÍTICA: El clima YA está confirmado ("${effectiveWeatherLabel}"). En cuanto el usuario mencione el EVENTO, devuelve action "generate_outfit" DE INMEDIATO sin más preguntas.`
+    : ''
+}
+`
+}
 
 REGLAS GENERALES:
 - Responde siempre en español, de forma cálida y natural — máximo 2 oraciones
@@ -1216,20 +1682,25 @@ RESPONDE ÚNICAMENTE CON ESTE JSON (sin markdown, sin texto extra):
 action posibles: "chat" | "generate_outfit" | "request_face_photo"
 Cuando action = "generate_outfit": incluye "event" y "weather"
 Clima por defecto si lo necesitas: "${effectiveWeatherLabel ?? 'templado'}"
-Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
+Evento por defecto si lo necesitas: "${savedEvent ?? ''}"`;
 
     const fullPrompt = `HISTORIAL DE CONVERSACIÓN:\n${historyText}\n\n---\nResponde al último mensaje del Usuario siguiendo todas las reglas del sistema.`;
 
     const parseResponse = (raw: string) => {
       const parsed = this.parseJsonFromLlm<{
-        reply?: string; action?: string; event?: string | null; weather?: string | null;
+        reply?: string;
+        action?: string;
+        event?: string | null;
+        weather?: string | null;
       }>(raw);
       return {
         reply: parsed.reply?.trim() || '¿En qué puedo ayudarte?',
-        action: (['chat', 'generate_outfit', 'request_face_photo'].includes(parsed.action ?? '')
-          ? parsed.action as 'chat' | 'generate_outfit' | 'request_face_photo'
-          : 'chat'),
-        event:   parsed.event   ?? undefined,
+        action: ['chat', 'generate_outfit', 'request_face_photo'].includes(
+          parsed.action ?? '',
+        )
+          ? (parsed.action as 'chat' | 'generate_outfit' | 'request_face_photo')
+          : 'chat',
+        event: parsed.event ?? undefined,
         weather: parsed.weather ?? undefined,
       };
     };
@@ -1238,7 +1709,7 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     try {
       const groqMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemInstruction },
-        { role: 'user',   content: fullPrompt },
+        { role: 'user', content: fullPrompt },
       ];
       const completion = await this.groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
@@ -1247,52 +1718,78 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
         max_tokens: 400,
         stream: false,
       });
-      const raw = (completion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim();
-      if (raw) { console.log('[fashionChat] Groq OK'); return parseResponse(raw); }
+      const raw = (
+        completion as OpenAI.Chat.ChatCompletion
+      ).choices[0]?.message?.content?.trim();
+      if (raw) {
+        console.log('[fashionChat] Groq OK');
+        return parseResponse(raw);
+      }
     } catch (err) {
-      console.warn('[fashionChat] Groq falló:', (err as Error).message.slice(0, 120));
+      console.warn(
+        '[fashionChat] Groq falló:',
+        (err as Error).message.slice(0, 120),
+      );
     }
 
     // 2. Gemini 2.5 Flash
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction,
         generationConfig: { temperature: 0.85, maxOutputTokens: 400 },
       });
       const result = await model.generateContent(fullPrompt);
       const raw = result.response.text();
-      if (raw) { console.log('[fashionChat] Gemini OK'); return parseResponse(raw); }
+      if (raw) {
+        console.log('[fashionChat] Gemini OK');
+        return parseResponse(raw);
+      }
     } catch (err) {
-      console.warn('[fashionChat] Gemini falló:', (err as Error).message.slice(0, 120));
+      console.warn(
+        '[fashionChat] Gemini falló:',
+        (err as Error).message.slice(0, 120),
+      );
     }
 
     // 3. OpenRouter — fallback final
     try {
       const orMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemInstruction },
-        { role: 'user',   content: fullPrompt },
+        { role: 'user', content: fullPrompt },
       ];
       const completion = await this.openrouter.chat.completions.create({
-        model: 'google/gemma-4-27b-it:free',
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
         messages: orMessages,
         temperature: 0.85,
         max_tokens: 400,
         stream: false,
       });
-      const raw = (completion as OpenAI.Chat.ChatCompletion).choices[0]?.message?.content?.trim();
-      if (raw) { console.log('[fashionChat] OpenRouter OK'); return parseResponse(raw); }
+      const raw = (
+        completion as OpenAI.Chat.ChatCompletion
+      ).choices[0]?.message?.content?.trim();
+      if (raw) {
+        console.log('[fashionChat] OpenRouter OK');
+        return parseResponse(raw);
+      }
     } catch (err) {
-      console.warn('[fashionChat] OpenRouter falló:', (err as Error).message.slice(0, 120));
+      console.warn(
+        '[fashionChat] OpenRouter falló:',
+        (err as Error).message.slice(0, 120),
+      );
     }
 
-    return { reply: 'Lo siento, los servicios de IA están ocupados en este momento. ¿Puedes intentarlo de nuevo en un segundo?', action: 'chat' };
+    return {
+      reply:
+        'Lo siento, los servicios de IA están ocupados en este momento. ¿Puedes intentarlo de nuevo en un segundo?',
+      action: 'chat',
+    };
   }
 
   async detectAffirmative(text: string): Promise<boolean> {
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         generationConfig: { temperature: 0, maxOutputTokens: 5 },
       });
       const result = await model.generateContent(
@@ -1300,14 +1797,19 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
       );
       return result.response.text().trim().toLowerCase().startsWith('yes');
     } catch {
-      return /^(s[ií]|si|yes|dale|claro|por supuesto|ok|va|bueno|quiero|adelante|obvio|sisi|yep|yeah|aha)/i.test(text.trim());
+      return /^(s[ií]|si|yes|dale|claro|por supuesto|ok|va|bueno|quiero|adelante|obvio|sisi|yep|yeah|aha)/i.test(
+        text.trim(),
+      );
     }
   }
 
-  async fashionFreeChat(userMessage: string, recentMessages: string): Promise<string> {
+  async fashionFreeChat(
+    userMessage: string,
+    recentMessages: string,
+  ): Promise<string> {
     try {
       const model = this.gemini.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         systemInstruction:
           'Eres un asistente experto en moda y estilo personal. Ya ayudaste al usuario a elegir un outfit. ' +
           'La conversación puede continuar sobre moda, consejos de estilo, combinaciones, tendencias o cualquier duda que tenga. ' +
@@ -1333,26 +1835,85 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     description: string,
   ): Promise<{ haircut: string; hairColor: string }> {
     const HAIRCUT_VALUES = [
-      'Undercut','Crew Cut','Slicked Back','Side-Parted','Center-Parted',
-      'Faux Hawk','Mohawk','Mohawk Fade','Buzz Cut','Pompadour','Quiff',
-      'Man Bun','Top Knot','Comb Over','French Crop','Ivy League','Caesar Cut',
-      'Curly','Wavy','Straight','Layered','Choppy Layers','Razor Cut',
-      'Bob','Lob','Angled Bob','Inverted Bob','Pixie Cut','Shag',
-      'Blunt Bangs','Side-Swept Bangs','Curtain Bangs',
-      'High Ponytail','Low Ponytail',
-      'Messy Bun','Chignon','French Twist','Updo',
-      'French Braid','Dutch Braid','Fishtail Braid','Box Braids','Cornrows',
-      'Dreadlocks','Afro','Perm',
-      'Hollywood Waves','Glamorous Waves','Soft Waves','Finger Waves',
-      'Tousled','Feathered','Ombré',
+      'Undercut',
+      'Crew Cut',
+      'Slicked Back',
+      'Side-Parted',
+      'Center-Parted',
+      'Faux Hawk',
+      'Mohawk',
+      'Mohawk Fade',
+      'Buzz Cut',
+      'Pompadour',
+      'Quiff',
+      'Man Bun',
+      'Top Knot',
+      'Comb Over',
+      'French Crop',
+      'Ivy League',
+      'Caesar Cut',
+      'Curly',
+      'Wavy',
+      'Straight',
+      'Layered',
+      'Choppy Layers',
+      'Razor Cut',
+      'Bob',
+      'Lob',
+      'Angled Bob',
+      'Inverted Bob',
+      'Pixie Cut',
+      'Shag',
+      'Blunt Bangs',
+      'Side-Swept Bangs',
+      'Curtain Bangs',
+      'High Ponytail',
+      'Low Ponytail',
+      'Messy Bun',
+      'Chignon',
+      'French Twist',
+      'Updo',
+      'French Braid',
+      'Dutch Braid',
+      'Fishtail Braid',
+      'Box Braids',
+      'Cornrows',
+      'Dreadlocks',
+      'Afro',
+      'Perm',
+      'Hollywood Waves',
+      'Glamorous Waves',
+      'Soft Waves',
+      'Finger Waves',
+      'Tousled',
+      'Feathered',
+      'Ombré',
     ];
     const COLOR_VALUES = [
-      'Jet Black','Dark Brown','Chestnut','Medium Brown','Light Brown',
-      'Ash Brown','Warm Brown','Mahogany','Auburn','Dark Auburn',
-      'Copper','Red','Burgundy',
-      'Honey Blonde','Golden Blonde','Blonde','Ash Blonde','Dirty Blonde',
-      'Dark Blonde','Strawberry Blonde','Platinum Blonde','Rose Gold',
-      'Silver','White',
+      'Jet Black',
+      'Dark Brown',
+      'Chestnut',
+      'Medium Brown',
+      'Light Brown',
+      'Ash Brown',
+      'Warm Brown',
+      'Mahogany',
+      'Auburn',
+      'Dark Auburn',
+      'Copper',
+      'Red',
+      'Burgundy',
+      'Honey Blonde',
+      'Golden Blonde',
+      'Blonde',
+      'Ash Blonde',
+      'Dirty Blonde',
+      'Dark Blonde',
+      'Strawberry Blonde',
+      'Platinum Blonde',
+      'Rose Gold',
+      'Silver',
+      'White',
     ];
 
     const prompt =
@@ -1366,16 +1927,24 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
       `DESCRIPTION:\n${description}`;
 
     const model = this.gemini.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: { temperature: 0, maxOutputTokens: 60, responseMimeType: 'application/json' },
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: 60,
+        responseMimeType: 'application/json',
+      },
     });
     const result = await model.generateContent(prompt);
     const parsed = JSON.parse(result.response.text().trim()) as {
       haircut?: string;
       hair_color?: string;
     };
-    const haircut   = HAIRCUT_VALUES.includes(parsed.haircut   ?? '') ? parsed.haircut!   : 'Layered';
-    const hairColor = COLOR_VALUES.includes(parsed.hair_color  ?? '') ? parsed.hair_color! : 'Dark Brown';
+    const haircut = HAIRCUT_VALUES.includes(parsed.haircut ?? '')
+      ? parsed.haircut!
+      : 'Layered';
+    const hairColor = COLOR_VALUES.includes(parsed.hair_color ?? '')
+      ? parsed.hair_color!
+      : 'Dark Brown';
     return { haircut, hairColor };
   }
 
@@ -1386,7 +1955,8 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     prompt: string,
   ): Promise<string> {
     const apiKey = envs.replicateApiKey;
-    if (!apiKey) throw new BadRequestException('REPLICATE_API_KEY no está configurado');
+    if (!apiKey)
+      throw new BadRequestException('REPLICATE_API_KEY no está configurado');
 
     console.log(`[FLUX-2-MAX] Iniciando con ${inputImages.length} imágenes`);
 
@@ -1394,7 +1964,10 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
       'https://api.replicate.com/v1/models/black-forest-labs/flux-2-max/predictions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${apiKey}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${apiKey}`,
+        },
         body: JSON.stringify({
           input: {
             prompt,
@@ -1409,73 +1982,123 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     );
 
     const submitText = await submitRes.text();
-    console.log(`[FLUX-2-MAX] Submit HTTP ${submitRes.status}:`, submitText.slice(0, 300));
+    console.log(
+      `[FLUX-2-MAX] Submit HTTP ${submitRes.status}:`,
+      submitText.slice(0, 300),
+    );
 
     if (!submitRes.ok) {
-      if (submitRes.status === 402) throw new BadRequestException('Créditos Replicate insuficientes. Recargá en replicate.com/account/billing');
-      throw new BadRequestException(`FLUX-2-MAX error ${submitRes.status}: ${submitText.slice(0, 300)}`);
+      if (submitRes.status === 402)
+        throw new BadRequestException(
+          'Créditos Replicate insuficientes. Recargá en replicate.com/account/billing',
+        );
+      throw new BadRequestException(
+        `FLUX-2-MAX error ${submitRes.status}: ${submitText.slice(0, 300)}`,
+      );
     }
 
     const submitJson = JSON.parse(submitText) as {
-      id?: string; urls?: { get?: string }; status?: string; output?: string | string[];
+      id?: string;
+      urls?: { get?: string };
+      status?: string;
+      output?: string | string[];
     };
 
     // Replicate puede devolver string o string[] dependiendo del modelo
     const extractUrl = (output?: string | string[]): string | undefined =>
-      Array.isArray(output) ? output[0] : (typeof output === 'string' ? output : undefined);
+      Array.isArray(output)
+        ? output[0]
+        : typeof output === 'string'
+          ? output
+          : undefined;
 
     const immediateUrl = extractUrl(submitJson.output);
     if (submitJson.status === 'succeeded' && immediateUrl) return immediateUrl;
 
     const predictionId = submitJson.id;
-    if (!predictionId) throw new BadRequestException(`Replicate no devolvió ID: ${submitText.slice(0, 200)}`);
+    if (!predictionId)
+      throw new BadRequestException(
+        `Replicate no devolvió ID: ${submitText.slice(0, 200)}`,
+      );
 
-    const pollUrl = submitJson.urls?.get ?? `https://api.replicate.com/v1/predictions/${predictionId}`;
+    const pollUrl =
+      submitJson.urls?.get ??
+      `https://api.replicate.com/v1/predictions/${predictionId}`;
 
     // Poll hasta succeeded (max 40 × 4s = 160s)
     for (let i = 0; i < 40; i++) {
-      await new Promise<void>(r => setTimeout(r, 4_000));
+      await new Promise<void>((r) => setTimeout(r, 4_000));
       try {
         const pollRes = await fetch(pollUrl, {
-          headers: { 'Authorization': `Token ${apiKey}` },
+          headers: { Authorization: `Token ${apiKey}` },
           signal: AbortSignal.timeout(10_000),
         });
         if (!pollRes.ok) continue;
-        const p = await pollRes.json() as { status?: string; output?: string | string[]; error?: string };
+        const p = (await pollRes.json()) as {
+          status?: string;
+          output?: string | string[];
+          error?: string;
+        };
         console.log(`[FLUX-2-MAX] poll ${i + 1}/40 status: ${p.status}`);
         const url = extractUrl(p.output);
         if (p.status === 'succeeded' && url) return url;
-        if (p.status === 'failed')   throw new BadRequestException(`FLUX-2-MAX falló: ${p.error ?? 'error desconocido'}`);
-        if (p.status === 'canceled') throw new BadRequestException('FLUX-2-MAX: predicción cancelada');
+        if (p.status === 'failed')
+          throw new BadRequestException(
+            `FLUX-2-MAX falló: ${p.error ?? 'error desconocido'}`,
+          );
+        if (p.status === 'canceled')
+          throw new BadRequestException('FLUX-2-MAX: predicción cancelada');
       } catch (e) {
         if (e instanceof BadRequestException) throw e;
         continue;
       }
     }
-    throw new BadRequestException('FLUX-2-MAX tardó demasiado. Intentá de nuevo.');
+    throw new BadRequestException(
+      'FLUX-2-MAX tardó demasiado. Intentá de nuevo.',
+    );
   }
 
-  private getBodyPartForGarment(category: string | null, description: string, possessive: string): string {
+  private getBodyPartForGarment(
+    category: string | null,
+    description: string,
+    possessive: string,
+  ): string {
     switch (category ?? '') {
-      case 'TOP':       return `on ${possessive} torso`;
-      case 'OUTERWEAR': return `as an outer layer on ${possessive} torso`;
-      case 'BOTTOM':    return `on ${possessive} legs`;
-      case 'FOOTWEAR':  return `on ${possessive} feet`;
-      case 'DRESS':     return `as a full-body garment`;
+      case 'TOP':
+        return `on ${possessive} torso`;
+      case 'OUTERWEAR':
+        return `as an outer layer on ${possessive} torso`;
+      case 'BOTTOM':
+        return `on ${possessive} legs`;
+      case 'FOOTWEAR':
+        return `on ${possessive} feet`;
+      case 'DRESS':
+        return `as a full-body garment`;
       case 'ACCESSORY': {
         const desc = description.toLowerCase();
-        if (/\b(cap|hat|gorra|beret|beanie|fedora|snapback|baseball)\b/.test(desc)) return `on ${possessive} head`;
-        if (/\b(watch|reloj|chronograph|timepiece)\b/.test(desc))                   return `on ${possessive} wrist`;
-        if (/\b(belt|cintur[oó]n)\b/.test(desc))                                    return `around ${possessive} waist`;
-        if (/\b(necklace|collar|pendant|chain|choker)\b/.test(desc))                return `around ${possessive} neck`;
-        if (/\b(sunglasses|glasses|gafas|lentes)\b/.test(desc))                     return `on ${possessive} face`;
-        if (/\b(bracelet|pulsera)\b/.test(desc))                                    return `on ${possessive} wrist`;
-        if (/\b(ring|anillo)\b/.test(desc))                                         return `on ${possessive} finger`;
-        if (/\b(bag|bolso|mochila|purse|backpack|handbag)\b/.test(desc))            return `carried by ${possessive} side`;
-        if (/\b(scarf|bufanda|tie|corbata)\b/.test(desc))                           return `around ${possessive} neck`;
+        if (
+          /\b(cap|hat|gorra|beret|beanie|fedora|snapback|baseball)\b/.test(desc)
+        )
+          return `on ${possessive} head`;
+        if (/\b(watch|reloj|chronograph|timepiece)\b/.test(desc))
+          return `on ${possessive} wrist`;
+        if (/\b(belt|cintur[oó]n)\b/.test(desc))
+          return `around ${possessive} waist`;
+        if (/\b(necklace|collar|pendant|chain|choker)\b/.test(desc))
+          return `around ${possessive} neck`;
+        if (/\b(sunglasses|glasses|gafas|lentes)\b/.test(desc))
+          return `on ${possessive} face`;
+        if (/\b(bracelet|pulsera)\b/.test(desc))
+          return `on ${possessive} wrist`;
+        if (/\b(ring|anillo)\b/.test(desc)) return `on ${possessive} finger`;
+        if (/\b(bag|bolso|mochila|purse|backpack|handbag)\b/.test(desc))
+          return `carried by ${possessive} side`;
+        if (/\b(scarf|bufanda|tie|corbata)\b/.test(desc))
+          return `around ${possessive} neck`;
         return `as an accessory`;
       }
-      default: return '';
+      default:
+        return '';
     }
   }
 
@@ -1486,10 +2109,21 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     garmentCategory?: string | null,
     gender?: string | null,
   ): Promise<string> {
-    const possessive  = gender === 'MALE' ? 'his' : gender === 'FEMALE' ? 'her' : 'their';
-    const subject     = gender === 'MALE' ? 'He' : gender === 'FEMALE' ? 'She' : 'They';
-    const personLabel = gender === 'MALE' ? 'male model' : gender === 'FEMALE' ? 'female model' : 'person';
-    const bodyPart    = this.getBodyPartForGarment(garmentCategory ?? 'TOP', garmentDescription, possessive);
+    const possessive =
+      gender === 'MALE' ? 'his' : gender === 'FEMALE' ? 'her' : 'their';
+    const subject =
+      gender === 'MALE' ? 'He' : gender === 'FEMALE' ? 'She' : 'They';
+    const personLabel =
+      gender === 'MALE'
+        ? 'male model'
+        : gender === 'FEMALE'
+          ? 'female model'
+          : 'person';
+    const bodyPart = this.getBodyPartForGarment(
+      garmentCategory ?? 'TOP',
+      garmentDescription,
+      possessive,
+    );
 
     const prompt =
       `A full-body fashion photography shot of the exact ${personLabel} from input_file_0.png, ` +
@@ -1498,7 +2132,10 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
       `Do not add any other clothing, accessories, or items not shown in the reference images. ` +
       `Keep the exact background and lighting from input_file_0.png.`;
 
-    return this.replicateFlux2MaxCall([personImageUrl, garmentImageUrl], prompt);
+    return this.replicateFlux2MaxCall(
+      [personImageUrl, garmentImageUrl],
+      prompt,
+    );
   }
 
   // ─── Outfit Try-On multi-prenda — FLUX.2 [max] en una sola llamada ───────────
@@ -1507,47 +2144,81 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     outfit: {
       garmentOutfits: Array<{
         order: number;
-        garment: { path: string; category: string | null; description?: string | null; name?: string | null };
+        garment: {
+          path: string;
+          category: string | null;
+          description?: string | null;
+          name?: string | null;
+        };
       }>;
     },
-    userAttr: { gender?: string | null; skinTone?: string | null; bodyType?: string | null; stature?: number | null } | null,
+    userAttr: {
+      gender?: string | null;
+      skinTone?: string | null;
+      bodyType?: string | null;
+      stature?: number | null;
+    } | null,
     bodyPhotoUrl?: string | null,
   ): Promise<string> {
     if (!bodyPhotoUrl) throw new BadRequestException('NO_BODY_PHOTO');
 
-    const allGarments = [...outfit.garmentOutfits].sort((a, b) => a.order - b.order);
-    if (allGarments.length === 0) throw new BadRequestException('El outfit no tiene prendas');
+    const allGarments = [...outfit.garmentOutfits].sort(
+      (a, b) => a.order - b.order,
+    );
+    if (allGarments.length === 0)
+      throw new BadRequestException('El outfit no tiene prendas');
 
     // Seleccionar prendas: max 1 por categoría (excepto ACCESSORY), DRESS excluye TOP y BOTTOM
-    const hasDress = allGarments.some(go => go.garment.category === 'DRESS');
+    const hasDress = allGarments.some((go) => go.garment.category === 'DRESS');
     let toApply: typeof allGarments;
     if (hasDress) {
-      const dresses    = allGarments.filter(go => go.garment.category === 'DRESS').slice(0, 1);
-      const footwear   = allGarments.filter(go => go.garment.category === 'FOOTWEAR').slice(0, 1);
-      const accessories = allGarments.filter(go => go.garment.category === 'ACCESSORY');
+      const dresses = allGarments
+        .filter((go) => go.garment.category === 'DRESS')
+        .slice(0, 1);
+      const footwear = allGarments
+        .filter((go) => go.garment.category === 'FOOTWEAR')
+        .slice(0, 1);
+      const accessories = allGarments.filter(
+        (go) => go.garment.category === 'ACCESSORY',
+      );
       toApply = [...dresses, ...footwear, ...accessories];
     } else {
       const seen = new Set<string>();
       toApply = [];
       for (const go of allGarments) {
         const cat = go.garment.category ?? 'ACCESSORY';
-        if (cat === 'ACCESSORY') { toApply.push(go); }
-        else if (!seen.has(cat)) { seen.add(cat); toApply.push(go); }
+        if (cat === 'ACCESSORY') {
+          toApply.push(go);
+        } else if (!seen.has(cat)) {
+          seen.add(cat);
+          toApply.push(go);
+        }
       }
     }
 
     // FLUX.2 [max] acepta máximo 8 imágenes (persona + 7 prendas)
     if (toApply.length > 7) toApply = toApply.slice(0, 7);
 
-    const gender      = userAttr?.gender ?? null;
-    const possessive  = gender === 'MALE' ? 'his' : gender === 'FEMALE' ? 'her' : 'their';
-    const subject     = gender === 'MALE' ? 'He' : gender === 'FEMALE' ? 'She' : 'They';
-    const personLabel = gender === 'MALE' ? 'male model' : gender === 'FEMALE' ? 'female model' : 'person';
+    const gender = userAttr?.gender ?? null;
+    const possessive =
+      gender === 'MALE' ? 'his' : gender === 'FEMALE' ? 'her' : 'their';
+    const subject =
+      gender === 'MALE' ? 'He' : gender === 'FEMALE' ? 'She' : 'They';
+    const personLabel =
+      gender === 'MALE'
+        ? 'male model'
+        : gender === 'FEMALE'
+          ? 'female model'
+          : 'person';
 
     const garmentLines = toApply.map((go, i) => {
-      const fileRef  = `input_file_${i + 1}.png`;
-      const desc     = go.garment.description ?? go.garment.name ?? 'garment';
-      const bodyPart = this.getBodyPartForGarment(go.garment.category, desc, possessive);
+      const fileRef = `input_file_${i + 1}.png`;
+      const desc = go.garment.description ?? go.garment.name ?? 'garment';
+      const bodyPart = this.getBodyPartForGarment(
+        go.garment.category,
+        desc,
+        possessive,
+      );
       return `- The ${desc} from ${fileRef}${bodyPart ? ' ' + bodyPart : ''}`;
     });
 
@@ -1559,9 +2230,11 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
       `Do not invent or modify colors, patterns or designs — use exactly what appears in each reference image. ` +
       `Keep the exact background and lighting from input_file_0.png.`;
 
-    const inputImages = [bodyPhotoUrl, ...toApply.map(go => go.garment.path)];
+    const inputImages = [bodyPhotoUrl, ...toApply.map((go) => go.garment.path)];
 
-    console.log(`[FLUX-2-MAX] Outfit try-on: ${toApply.length} prendas, gender: ${gender ?? 'unknown'}`);
+    console.log(
+      `[FLUX-2-MAX] Outfit try-on: ${toApply.length} prendas, gender: ${gender ?? 'unknown'}`,
+    );
     return this.replicateFlux2MaxCall(inputImages, prompt);
   }
 
@@ -1581,10 +2254,10 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
     network: string,
   ) {
     const networkLabels: Record<string, string> = {
-      linkedin:  'LinkedIn (profesional, ejecutivo, networking)',
+      linkedin: 'LinkedIn (profesional, ejecutivo, networking)',
       instagram: 'Instagram (lifestyle, estética, aspiracional)',
-      tiktok:    'TikTok (dinámico, auténtico, entretenido)',
-      facebook:  'Facebook (cercano, comunitario, accesible)',
+      tiktok: 'TikTok (dinámico, auténtico, entretenido)',
+      facebook: 'Facebook (cercano, comunitario, accesible)',
     };
 
     const hasProfile =
@@ -1604,7 +2277,15 @@ Evento por defecto si lo necesitas: "${savedEvent ?? ''}"` ;
 - Tono de piel: ${profile.skinTone ?? 'no especificado'}`
       : 'PERFIL DEL USUARIO: sin datos — generá recomendaciones generales de moda para esta red social.';
 
-    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    const days = [
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+      'Domingo',
+    ];
 
     const prompt = `Sos un experto en marca personal, moda y estrategia de contenido en redes sociales.
 Analizá el perfil del usuario y generá una guía completa de marca personal para ${networkLabels[network] ?? network}.
@@ -1707,8 +2388,12 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
 
     // Gemini fallback with 20s timeout
     const model = this.gemini.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: { temperature: 0.75, maxOutputTokens: 2800, responseMimeType: 'application/json' },
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        temperature: 0.75,
+        maxOutputTokens: 2800,
+        responseMimeType: 'application/json',
+      },
     });
     const geminiResult = await Promise.race([
       model.generateContent(prompt),
@@ -1716,7 +2401,9 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
         setTimeout(() => reject(new Error('Gemini timeout')), 20_000),
       ),
     ]);
-    return this.parseJsonFromLlm<Record<string, unknown>>(geminiResult.response.text());
+    return this.parseJsonFromLlm<Record<string, unknown>>(
+      geminiResult.response.text(),
+    );
   }
 
   private parseJsonFromLlm<T>(text: string): T {
@@ -1725,11 +2412,16 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
     // Strip markdown code fences
     if (cleanText.startsWith('```json')) cleanText = cleanText.substring(7);
     else if (cleanText.startsWith('```')) cleanText = cleanText.substring(3);
-    if (cleanText.endsWith('```')) cleanText = cleanText.substring(0, cleanText.length - 3);
+    if (cleanText.endsWith('```'))
+      cleanText = cleanText.substring(0, cleanText.length - 3);
     cleanText = cleanText.trim();
 
     // First attempt — valid JSON
-    try { return JSON.parse(cleanText) as T; } catch { /* fall through to repair */ }
+    try {
+      return JSON.parse(cleanText) as T;
+    } catch {
+      /* fall through to repair */
+    }
 
     // Second attempt — repair truncated JSON
     // Remove trailing incomplete key (e.g. "key": or "key": partial_value)
@@ -1737,23 +2429,40 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
     // Remove trailing comma
     repaired = repaired.replace(/,\s*$/, '');
     // Close unclosed string
-    let inStr = false; let esc = false;
+    let inStr = false;
+    let esc = false;
     for (let i = 0; i < repaired.length; i++) {
       const c = repaired[i];
-      if (esc) { esc = false; continue; }
-      if (c === '\\') { esc = true; continue; }
+      if (esc) {
+        esc = false;
+        continue;
+      }
+      if (c === '\\') {
+        esc = true;
+        continue;
+      }
       if (c === '"') inStr = !inStr;
     }
     if (inStr) repaired += '"';
     repaired = repaired.replace(/,\s*$/, '');
     // Use a stack so nested structures close in the correct order ({} before [] etc.)
     const stack: string[] = [];
-    inStr = false; esc = false;
+    inStr = false;
+    esc = false;
     for (let i = 0; i < repaired.length; i++) {
       const c = repaired[i];
-      if (esc) { esc = false; continue; }
-      if (c === '\\') { esc = true; continue; }
-      if (c === '"') { inStr = !inStr; continue; }
+      if (esc) {
+        esc = false;
+        continue;
+      }
+      if (c === '\\') {
+        esc = true;
+        continue;
+      }
+      if (c === '"') {
+        inStr = !inStr;
+        continue;
+      }
       if (inStr) continue;
       if (c === '{') stack.push('}');
       else if (c === '[') stack.push(']');
@@ -1761,14 +2470,20 @@ Respondé ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
     }
     while (stack.length > 0) repaired += stack.pop()!;
 
-    try { return JSON.parse(repaired) as T; } catch { /* fall through to error */ }
+    try {
+      return JSON.parse(repaired) as T;
+    } catch {
+      /* fall through to error */
+    }
 
     // Nothing worked — log and throw
     console.error('--- ERROR PARSING JSON FROM LLM ---');
     console.error('RAW:', text);
     console.error('REPAIRED ATTEMPT:', repaired);
     console.error('-----------------------------------');
-    throw new BadRequestException('La IA devolvió una respuesta que no pudo procesarse. Intentá de nuevo.');
+    throw new BadRequestException(
+      'La IA devolvió una respuesta que no pudo procesarse. Intentá de nuevo.',
+    );
   }
 
   // ─── ML Retraining ──────────────────────────────────────────────────────────
