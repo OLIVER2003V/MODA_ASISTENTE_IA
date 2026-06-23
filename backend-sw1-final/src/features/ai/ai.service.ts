@@ -824,10 +824,36 @@ hairstyleIndex debe ser un número del 1 al ${hairstyles.length}.`,
       userDescription = parts.join(' | ') || 'Sin atributos especificados';
     }
 
-    const garmentsList = garmentsWithDescription
+    // Cap garments at 20 to stay under Groq's 6 000 TPM limit.
+    // Select at most 3 per category so every slot is covered.
+    const MAX_GARMENTS = 20;
+    const CAP_PER_CATEGORY = 3;
+    const selectedForPrompt = (() => {
+      const byCategory = new Map<string, typeof garmentsWithDescription>();
+      for (const g of garmentsWithDescription) {
+        const cat = g.category ?? 'OTHER';
+        if (!byCategory.has(cat)) byCategory.set(cat, []);
+        byCategory.get(cat)!.push(g);
+      }
+      const result: typeof garmentsWithDescription = [];
+      // Priority order for outfit composition
+      const priority = ['TOP', 'BOTTOM', 'DRESS', 'OUTERWEAR', 'FOOTWEAR', 'ACCESSORY'];
+      const rest = [...byCategory.keys()].filter((c) => !priority.includes(c));
+      for (const cat of [...priority, ...rest]) {
+        const items = byCategory.get(cat) ?? [];
+        result.push(...items.slice(0, CAP_PER_CATEGORY));
+        if (result.length >= MAX_GARMENTS) break;
+      }
+      return result.slice(0, MAX_GARMENTS);
+    })();
+
+    const garmentsList = selectedForPrompt
       .map(
-        (g, i) =>
-          `[${i}] ID: ${g.id} | Categoría: ${g.category || 'SIN_CATEGORIA'}\n    Descripción: ${g.description}`,
+        (g, i) => {
+          // Truncate long descriptions to keep tokens low
+          const desc = (g.description ?? '').slice(0, 200);
+          return `[${i}] ID: ${g.id} | Categoría: ${g.category || 'SIN_CATEGORIA'}\n    Descripción: ${desc}`;
+        },
       )
       .join('\n\n');
 
