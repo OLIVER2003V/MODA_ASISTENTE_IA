@@ -24,3 +24,23 @@ Thumbs.db
 # Firebase credentials (NEVER commit)
 *adminsdk*.json
 firebase-credentials.json
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Custom ML Service (ai-service)
+ai-service/dataset_raw/
+ai-service/models/face_landmarker.task
+ai-service/models/face_shape_dataset.csv
+ai-service/models/face_shape_dataset_real.csv
+
+
